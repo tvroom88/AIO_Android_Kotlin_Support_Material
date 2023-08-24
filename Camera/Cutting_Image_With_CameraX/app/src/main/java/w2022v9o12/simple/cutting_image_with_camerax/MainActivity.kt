@@ -94,51 +94,8 @@ class MainActivity : AppCompatActivity() {
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
-    // 이미지 저장후 자동으로 이미지를 저장해준다.
-    private fun takePhotoAndSavePhoto() {
-        // Get a stable reference of the modifiable image capture use case
-        val imageCapture = imageCapture ?: return
 
-        // Create time stamped name and MediaStore entry.
-        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
-            .format(System.currentTimeMillis())
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-Image")
-            }
-        }
-
-        // Create output options object which contains file + metadata
-        val outputOptions = ImageCapture.OutputFileOptions
-            .Builder(
-                contentResolver,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                contentValues
-            )
-            .build()
-
-        // Set up image capture listener, which is triggered after photo has
-        // been taken
-        imageCapture.takePicture(
-            outputOptions,
-            ContextCompat.getMainExecutor(this),
-            object : ImageCapture.OnImageSavedCallback {
-                override fun onError(exc: ImageCaptureException) {
-                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
-                }
-
-                override fun
-                        onImageSaved(output: ImageCapture.OutputFileResults) {
-                    val msg = "Photo capture succeeded: ${output.savedUri}"
-                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-                    Log.d(TAG, msg)
-                }
-            }
-        )
-    }
-
+    //이미지를 저장하지 않고 데이터만 가져온다.
     private fun takeAndProcessImage() {
         val imageCapture = imageCapture
         val newExecutor: Executor = Executors.newSingleThreadExecutor()
@@ -168,8 +125,8 @@ class MainActivity : AppCompatActivity() {
         buffer.get(bytes)
 
         val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-//        val imageBitmap = cropImage(bitmap, viewFinder, guideline)
-        val imageBitmap = cropImage(bitmap, constraintLayout, guideline)
+        val imageBitmap = cropImage(bitmap, viewFinder, guideline)
+//        val imageBitmap = cropImage(bitmap, constraintLayout, guideline)
 
         val app = application as MyApplication
 
@@ -180,7 +137,7 @@ class MainActivity : AppCompatActivity() {
 
 
         // Bitmap 사용 후 해제
-//        bitmap.recycle()
+        bitmap.recycle()
     }
 
     private fun startCamera() {
@@ -282,6 +239,7 @@ class MainActivity : AppCompatActivity() {
         ) //100 is the best quality possibe
         return bitmapFinal
     }
+
 
     fun rotateTheImage(orientation: Int, oldBitmap: Bitmap): Bitmap {
         val newBitmap: Bitmap
