@@ -1,7 +1,6 @@
 package w2022v9o12.simple.practicecamerax;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.AspectRatio;
 import androidx.camera.core.CameraSelector;
@@ -20,8 +19,6 @@ import androidx.camera.video.VideoCapture;
 import androidx.camera.video.VideoRecordEvent;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.PermissionChecker;
-import androidx.core.util.Consumer;
 
 import android.Manifest;
 import android.content.ContentValues;
@@ -49,7 +46,6 @@ import kotlin.jvm.functions.Function1;
 import w2022v9o12.simple.practicecamerax.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
-
     private ActivityMainBinding viewBinding;
 
     private ImageCapture imageCapture;
@@ -63,7 +59,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS";
     private static final int REQUEST_CODE_PERMISSIONS = 10;
     private static final String[] REQUIRED_PERMISSIONS = getRequiredPermissions();
-
     private int ratio = AspectRatio.RATIO_4_3;
 
     @Override
@@ -88,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void takePhoto() {
+
         // Get a stable reference of the modifiable image capture use case
         ImageCapture imageCapture = this.imageCapture;
         if (imageCapture == null) {
@@ -198,10 +194,9 @@ public class MainActivity extends AppCompatActivity {
 
                 videoCapture = VideoCapture.withOutput(recorder);
 
-//                imageCapture = new ImageCapture.Builder()
-//                        .setTargetAspectRatio(ratio)
-//                        .build();
-//
+                imageCapture = new ImageCapture.Builder()
+                        .setTargetAspectRatio(ratio)
+                        .build();
 
                 imageAnalysis = new ImageAnalysis.Builder()
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -214,17 +209,14 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }));
 
-
                 // Select back camera as a default
                 CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
 
                 // Unbind use cases before rebinding
                 cameraProvider.unbindAll();
 
-                // Bind use cases to camera
-//                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture, imageAnalysis);
-                cameraProvider.bindToLifecycle(this, cameraSelector, preview, videoCapture);
-
+                // Bind use cases to camera - videoCapture는 빠져있다. UseCase는 최대 3개까지 가능하다.
+                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis, imageCapture);
 
             } catch (ExecutionException | InterruptedException e) {
                 Log.e(TAG, "Use case binding failed", e);
@@ -310,7 +302,6 @@ public class MainActivity extends AppCompatActivity {
             double luma = average(pixels);
 
             listener.onLumaCalculated(luma);
-
             image.close();
         }
     }
