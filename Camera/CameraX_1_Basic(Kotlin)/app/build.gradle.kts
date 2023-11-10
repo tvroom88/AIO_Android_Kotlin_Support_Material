@@ -51,24 +51,26 @@ dependencies {
 
 
     // CameraX core library using the camera2 implementation
-    val camerax_version = "1.4.0-alpha02"
+    val cameraxVersion = "1.4.0-alpha02"
 
-    // 다음 라인은 선택 사항이며, 핵심 라이브러리는 간접적으로 camera-camera2에 의해 포함됩니다.
-    implementation("androidx.camera:camera-core:${camerax_version}")
-    implementation("androidx.camera:camera-camera2:${camerax_version}")
+    // CameraX의 핵심 기능을 포함합니다. 카메라 촬영을 위한 기본 기능을 제공합니다.
+    implementation("androidx.camera:camera-core:${cameraxVersion}")
 
-    // CameraX Lifecycle 라이브러리를 추가로 사용하려면 추가하세요
-    implementation("androidx.camera:camera-lifecycle:${camerax_version}")
+    // CameraX가 Android Camera2 API를 기반으로 구축되었기 때문에 이 모듈은 Camera2 API와의 통합을 지원합니다.
+    implementation("androidx.camera:camera-camera2:${cameraxVersion}")
 
-    // CameraX VideoCapture 라이브러리를 추가로 사용하려면 추가하세요.
-    implementation("androidx.camera:camera-video:${camerax_version}")
+    // Android Lifecycle 라이브러리와 통합하여 카메라 수명 주기를 관리하는 기능을 제공합니다. 이 모듈을 사용하면 카메라 세션을 더 쉽게 관리할 수 있습니다.
+    implementation("androidx.camera:camera-lifecycle:${cameraxVersion}")
 
-    // CameraX View 클래스를 추가로 사용하려면 추가하세요.
-    implementation("androidx.camera:camera-view:${camerax_version}")
+    // 이 모듈은 비디오 촬영과 관련된 기능을 지원합니다. 비디오 캡처와 녹화를 위한 클래스 및 도구를 제공합니다.
+    implementation("androidx.camera:camera-video:${cameraxVersion}")
 
-    // CameraX ML Kit Vision 통합을 추가로 사용하려면 추가하세요.
-    implementation("androidx.camera:camera-mlkit-vision:${camerax_version}")
+    // 이 모듈은 CameraView와 관련된 클래스 및 위젯을 제공합니다. CameraView를 사용하면 앱에서 미리보기 화면을 표시하고 사용자 인터페이스와 통합하기가 더 쉬워집니다.
+    implementation("androidx.camera:camera-view:${cameraxVersion}")
 
-    // CameraX Extensions 라이브러리를 추가적으로 사용하려면 추가하세요.
-    implementation("androidx.camera:camera-extensions:${camerax_version}")
+    // ML Kit Vision과 통합하여 기계 학습을 사용한 컴퓨터 비전 작업에 카메라를 쉽게 통합할 수 있도록 돕습니다. 이 모듈은 ML Kit Vision API와의 통합을 지원합니다.
+    implementation("androidx.camera:camera-mlkit-vision:${cameraxVersion}")
+
+    // CameraX 확장 모듈을 포함하며, 다양한 확장을 통해 추가적인 기능과 기능을 확장할 수 있습니다.
+    implementation("androidx.camera:camera-extensions:${cameraxVersion}")
 }

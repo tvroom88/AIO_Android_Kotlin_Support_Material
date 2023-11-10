@@ -122,6 +122,8 @@ class MainActivity : AppCompatActivity() {
                     val msg = "Photo capture succeeded: ${output.savedUri}"
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
+                    Log.d(TAG, "ImageCapture url : " + output.savedUri)
+
                 }
             }
         )
@@ -247,7 +249,7 @@ class MainActivity : AppCompatActivity() {
 
                 // Bind use cases to camera
                 cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageAnalyzer, imageCapture, videoCapture
+                    this, cameraSelector, preview, imageAnalyzer, imageCapture
                 )
 
             } catch (exc: Exception) {
