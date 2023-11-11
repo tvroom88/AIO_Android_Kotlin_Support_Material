@@ -6,3 +6,4 @@
 
 #### 설명 : https://from-android-to-server.tistory.com/84
 
+![Screenshot_20231111_152619_PracticeCameraX](https://github.com/tvroom88/AIO_Android_Kotlin_Support_Material/assets/4710854/b9ea661c-a01c-4eb9-9ac0-185f5374ac8f)
