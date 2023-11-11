@@ -13,6 +13,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CameraX_1_Basic(Kotlin)"
+rootProject.name = "CameraX_2_takePicture"
 include(":app")
  
