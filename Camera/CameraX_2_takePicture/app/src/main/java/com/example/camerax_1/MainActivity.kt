@@ -4,14 +4,13 @@ import android.Manifest
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
@@ -23,22 +22,20 @@ import androidx.camera.video.FallbackStrategy
 import androidx.camera.video.Quality
 import androidx.camera.video.QualitySelector
 import androidx.camera.video.Recorder
-import androidx.camera.video.Recording
 import androidx.camera.video.VideoCapture
 import androidx.core.content.ContextCompat
 import com.example.camerax_1.databinding.ActivityMainBinding
-import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+
 class MainActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
     private var imageCapture: ImageCapture? = null
     private var videoCapture: VideoCapture<Recorder>? = null
-    private var recording: Recording? = null
 
     private lateinit var cameraExecutor: ExecutorService
 
@@ -71,14 +68,13 @@ class MainActivity : AppCompatActivity() {
 
         // Request camera permissions
         if (allPermissionsGranted()) {
-            takeAndProcessImage()
-//            startCamera()
+            startCamera()
         } else {
             requestPermissions()
         }
 
         // Set up the listeners for take photo and video capture buttons
-        viewBinding.imageCaptureButton.setOnClickListener { takePhoto() }
+        viewBinding.imageCaptureButton.setOnClickListener { takeAndProcessImage() }
         viewBinding.videoCaptureButton.setOnClickListener { }
 
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -108,8 +104,7 @@ class MainActivity : AppCompatActivity() {
             )
             .build()
 
-        // Set up image capture listener, which is triggered after photo has
-        // been taken
+        // Set up image capture listener, which is triggered after photo has been taken
         imageCapture.takePicture(
             outputOptions,
             ContextCompat.getMainExecutor(this),
@@ -203,11 +198,13 @@ class MainActivity : AppCompatActivity() {
             newExecutor,
             object : ImageCapture.OnImageCapturedCallback() {
                 override fun onCaptureSuccess(image: ImageProxy) {
+
+
                     // 이미지 데이터 추출 및 처리
                     val tempBitmap = image.toBitmap()
+                    (applicationContext as MyApplication).bitmap = tempBitmap
 
                     val intent = Intent(this@MainActivity, ResultActivity::class.java)
-                    intent.putExtra("bitmap", tempBitmap)
                     startActivity(intent)
 
                     // 이미지 닫기
