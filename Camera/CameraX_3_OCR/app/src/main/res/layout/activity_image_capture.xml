@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".ImageCaptureActivity">
 
-
     <androidx.camera.view.PreviewView
         android:id="@+id/viewFinder"
         android:layout_width="match_parent"
@@ -18,7 +17,8 @@
         android:id="@+id/imageView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:scaleType="fitCenter"
+        android:scaleType="fitXY"
+        android:adjustViewBounds="true"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintTop_toTopOf="parent" />
 

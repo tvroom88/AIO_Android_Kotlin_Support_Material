@@ -129,6 +129,7 @@ class ImageCaptureActivity : AppCompatActivity() {
 
             // Preview
             val preview = Preview.Builder()
+                .setTargetAspectRatio(mRatio)
                 .build()
                 .also {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
@@ -178,7 +179,6 @@ class ImageCaptureActivity : AppCompatActivity() {
                     )
                 }
             // [END run_detector]
-
 
             // ImageView UI를 교체하기 위한 부분
 //            if (!mFlag) {
