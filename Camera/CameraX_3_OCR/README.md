@@ -1,8 +1,6 @@
-# CameraX_1_Basic(Kotlin)
+# CameraX_3_OCR
 
-#### codelab 코드를 따라서 만든 소스입니다.
+#### Android CameraX API와 구글의 MLKIT을 이용해서 OCR을 구현하였습니다. 
 
-#### codelab에서는 코틀린으로 되어있으나 여기서는 자바로 만들었습니다.
-
-#### 설명 : https://from-android-to-server.tistory.com/84
+#### 설명 : https://from-android-to-server.tistory.com/80
 
