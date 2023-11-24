@@ -3,6 +3,7 @@ package w2022v9o12.simple.camerax_analysis.activities
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.nfc.NfcAdapter
 import android.nfc.tech.IsoDep
 import android.os.AsyncTask
@@ -18,15 +19,28 @@ import org.jmrtd.BACKey
 import org.jmrtd.BACKeySpec
 import org.jmrtd.PassportService
 import org.jmrtd.lds.CardSecurityFile
+import org.jmrtd.lds.DisplayedImageInfo
 import org.jmrtd.lds.PACEInfo
 import org.jmrtd.lds.SecurityInfo
+import org.jmrtd.lds.icao.DG11File
 import org.jmrtd.lds.icao.DG1File
+import org.jmrtd.lds.icao.DG2File
+import org.jmrtd.lds.icao.DG3File
+import org.jmrtd.lds.icao.DG5File
+import org.jmrtd.lds.icao.DG7File
 import org.jmrtd.lds.icao.MRZInfo
+import org.jmrtd.lds.iso19794.FaceImageInfo
+import org.jmrtd.lds.iso19794.FaceInfo
+import org.jmrtd.lds.iso19794.FingerImageInfo
 import w2022v9o12.simple.camerax_analysis.MainApplication
 import w2022v9o12.simple.camerax_analysis.R
 import w2022v9o12.simple.camerax_analysis.model.AdditionalPersonDetails
+import w2022v9o12.simple.camerax_analysis.model.DateUtil
 import w2022v9o12.simple.camerax_analysis.model.EDocument
+import w2022v9o12.simple.camerax_analysis.model.Image
+import w2022v9o12.simple.camerax_analysis.model.ImageUtil
 import w2022v9o12.simple.camerax_analysis.model.PersonDetails
+import java.util.Date
 
 class NfcScanActivity : AppCompatActivity() {
 
@@ -47,6 +61,7 @@ class NfcScanActivity : AppCompatActivity() {
 
     private lateinit var imageView: ImageView
     private lateinit var mContext: Context
+
     companion object {
         val EDOCUMENT = "EDOCUMENT"
     }
@@ -55,13 +70,12 @@ class NfcScanActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nfc_scan)
 
-
-
         passportNumberEditText = findViewById(R.id.passportNumberEditText)
         expirationDateEditText = findViewById(R.id.expirationDateEditText)
         birthDateEditText = findViewById(R.id.birthDateEditText)
 
         imageView = findViewById(R.id.imageView)
+
 
         // CaptuerActivity로 부터 받은 데이터 추출
         val intent: Intent = getIntent()
@@ -139,21 +153,31 @@ class NfcScanActivity : AppCompatActivity() {
         }
     }
 
-    private class ReadTask private constructor(private val isoDep: IsoDep, private val bacKey: BACKeySpec, val mContext:Context) : AsyncTask<Void?, Void?, Exception?>() {
+    private class ReadTask private constructor(
+        private val isoDep: IsoDep,
+        private val bacKey: BACKeySpec,
+        val mContext: Context
+    ) : AsyncTask<Void?, Void?, Exception?>() {
         var eDocument: EDocument = EDocument()
         var personDetails: PersonDetails = PersonDetails()
         var additionalPersonDetails: AdditionalPersonDetails = AdditionalPersonDetails()
+        val dateUtil = DateUtil()
+        val imageUtil = ImageUtil()
         override fun doInBackground(vararg params: Void?): Exception? {
             try {
                 val cardService: CardService = CardService.getInstance(isoDep)
                 cardService.open()
-                val service = PassportService(cardService, PassportService.NORMAL_MAX_TRANCEIVE_LENGTH,
-                    PassportService.DEFAULT_MAX_BLOCKSIZE, true, false)
+                val service = PassportService(
+                    cardService, PassportService.NORMAL_MAX_TRANCEIVE_LENGTH,
+                    PassportService.DEFAULT_MAX_BLOCKSIZE, true, false
+                )
                 service.open()
                 var paceSucceeded = false
                 try {
-                    val cardSecurityFile = CardSecurityFile(service.getInputStream(PassportService.EF_CARD_SECURITY))
-                    val securityInfoCollection: Collection<SecurityInfo> = cardSecurityFile.securityInfos
+                    val cardSecurityFile =
+                        CardSecurityFile(service.getInputStream(PassportService.EF_CARD_SECURITY))
+                    val securityInfoCollection: Collection<SecurityInfo> =
+                        cardSecurityFile.securityInfos
 
                     for (securityInfo: SecurityInfo? in securityInfoCollection) {
                         if (securityInfo is PACEInfo) {
@@ -183,136 +207,116 @@ class NfcScanActivity : AppCompatActivity() {
                 val dg1In: CardFileInputStream = service.getInputStream(PassportService.EF_DG1)
                 val dg1File: DG1File = DG1File(dg1In)
                 val mrzInfo: MRZInfo = dg1File.mrzInfo
-                personDetails.name= mrzInfo.secondaryIdentifier.replace("<", " ").trim { it <= ' ' }
-                personDetails.surname = mrzInfo.primaryIdentifier.replace("<", " ").trim { it <= ' ' }
+                personDetails.name =
+                    mrzInfo.secondaryIdentifier.replace("<", " ").trim { it <= ' ' }
+                personDetails.surname =
+                    mrzInfo.primaryIdentifier.replace("<", " ").trim { it <= ' ' }
 
-//                personDetails.setPersonalNumber(mrzInfo.getPersonalNumber())
-//                personDetails.setGender(mrzInfo.getGender().toString())
-//                personDetails.setBirthDate(DateUtil.convertFromMrzDate(mrzInfo.getDateOfBirth()))
-//                personDetails.setExpiryDate(DateUtil.convertFromMrzDate(mrzInfo.getDateOfExpiry()))
-//                personDetails.setSerialNumber(mrzInfo.getDocumentNumber())
-//                personDetails.setNationality(mrzInfo.getNationality())
-//                personDetails.setIssuerAuthority(mrzInfo.getIssuingState())
+                personDetails.personalNumber = mrzInfo.personalNumber
+                personDetails.gender = mrzInfo.gender.toString()
+                personDetails.birthDate = dateUtil.convertFromMrzDate(mrzInfo.dateOfBirth)
+                personDetails.expiryDate = dateUtil.convertFromMrzDate(mrzInfo.dateOfExpiry)
+                personDetails.serialNumber = mrzInfo.documentNumber
+                personDetails.nationality = mrzInfo.nationality
+                personDetails.issuerAuthority = mrzInfo.issuingState
 
-                Log.d("MRZInfoMRZInfo", "name : " + mrzInfo.secondaryIdentifier.replace("<", " ").trim { it <= ' ' })
-//                if (("I" == mrzInfo.documentCode)) {
-//                    docType = DocType.ID_CARD
-//                } else if (("P" == mrzInfo.getDocumentCode())) {
-//                    docType = DocType.PASSPORT
-//                }
+                Log.d(
+                    "MRZInfoMRZInfo",
+                    "name : " + mrzInfo.secondaryIdentifier.replace("<", " ").trim { it <= ' ' })
 
-//                // -- Face Image -- //
-//                val dg2In: CardFileInputStream = service.getInputStream(PassportService.EF_DG2)
-//                val dg2File = DG2File(dg2In)
-//                val faceInfos: List<FaceInfo> = dg2File.faceInfos
-//                val allFaceImageInfos: MutableList<FaceImageInfo> = ArrayList()
-//                for (faceInfo: FaceInfo in faceInfos) {
-//                    allFaceImageInfos.addAll(faceInfo.faceImageInfos)
-//                }
-//                if (allFaceImageInfos.isNotEmpty()) {
-//                    val faceImageInfo: FaceImageInfo = allFaceImageInfos.iterator().next()
-//                    val image: Image = ImageUtil.getImage(this@NfcScanActivity, faceImageInfo)
-//                    personDetails.setFaceImage(image.getBitmapImage())
-//                    //                    personDetails.setFaceImageBase64(image.getBase64Image());
-//                }
-//
-//                // -- Fingerprint (if exist)-- //
-//                try {
-//                    val dg3In: CardFileInputStream = service.getInputStream(PassportService.EF_DG3)
-//                    val dg3File: DG3File = DG3File(dg3In)
-//                    val fingerInfos: kotlin.collections.List<FingerInfo> = dg3File.getFingerInfos()
-//                    val allFingerImageInfos: kotlin.collections.MutableList<FingerImageInfo> =
-//                        java.util.ArrayList<FingerImageInfo>()
-//                    for (fingerInfo: FingerInfo in fingerInfos) {
-//                        allFingerImageInfos.addAll(fingerInfo.getFingerImageInfos())
-//                    }
-//                    val fingerprintsImage: kotlin.collections.MutableList<android.graphics.Bitmap> =
-//                        java.util.ArrayList<android.graphics.Bitmap>()
-//                    if (!allFingerImageInfos.isEmpty()) {
-//                        for (fingerImageInfo: FingerImageInfo? in allFingerImageInfos) {
-//                            val image: Image =
-//                                ImageUtil.getImage(this@NfcScanActivity, fingerImageInfo)
-//                            fingerprintsImage.add(image.getBitmapImage())
-//                        }
-//
-////                        personDetails.setFingerprints(fingerprintsImage);
-//                    }
-//                } catch (e: java.lang.Exception) {
-//                    android.util.Log.w(TAG, e)
-//                }
-//
-//                // -- Portrait Picture -- //
-//                try {
-//                    val dg5In: CardFileInputStream = service.getInputStream(PassportService.EF_DG5)
-//                    val dg5File: DG5File = DG5File(dg5In)
-//                    val displayedImageInfos: kotlin.collections.List<DisplayedImageInfo> =
-//                        dg5File.getImages()
-//                    if (!displayedImageInfos.isEmpty()) {
-//                        val displayedImageInfo: DisplayedImageInfo =
-//                            displayedImageInfos.iterator().next()
-//                        val image: Image =
-//                            ImageUtil.getImage(this@NfcScanActivity, displayedImageInfo)
-//                        //                        personDetails.setPortraitImage(image.getBitmapImage());
-////                        personDetails.setPortraitImageBase64(image.getBase64Image());
-//                    }
-//                } catch (e: java.lang.Exception) {
-//                    android.util.Log.w(TAG, e)
-//                }
-//
+
+                // -- Face Image -- //
+                val dg2In: CardFileInputStream = service.getInputStream(PassportService.EF_DG2)
+                val dg2File = DG2File(dg2In)
+                val faceInfos: List<FaceInfo> = dg2File.faceInfos
+                val allFaceImageInfos: MutableList<FaceImageInfo> = ArrayList()
+                for (faceInfo: FaceInfo in faceInfos) {
+                    allFaceImageInfos.addAll(faceInfo.faceImageInfos)
+                }
+                if (allFaceImageInfos.isNotEmpty()) {
+                    val faceImageInfo: FaceImageInfo = allFaceImageInfos.iterator().next()
+                    val image: Image = imageUtil.getImage(mContext, faceImageInfo)
+                    personDetails.faceImage = image.bitmapImage
+                    personDetails.faceImageBase64 = image.base64Image
+                }
+
+                // -- Fingerprint (if exist)-- //
+                try {
+                    val dg3In: CardFileInputStream = service.getInputStream(PassportService.EF_DG3)
+                    val dg3File = DG3File(dg3In)
+                    val fingerInfos = dg3File.fingerInfos
+                    val allFingerImageInfos: MutableList<FingerImageInfo> = ArrayList()
+                    for (fingerInfo in fingerInfos) {
+                        allFingerImageInfos.addAll(fingerInfo.fingerImageInfos)
+                    }
+                    val fingerprintsImage: MutableList<Bitmap> = ArrayList()
+                    if (allFingerImageInfos.isNotEmpty()) {
+                        for (fingerImageInfo in allFingerImageInfos) {
+                            val image: Image = imageUtil.getImage(mContext, fingerImageInfo)
+                            fingerprintsImage.add(image.bitmapImage)
+                        }
+                        personDetails.fingerprints = fingerprintsImage
+                    }
+                } catch (e: java.lang.Exception) {
+                    Log.w("TAG", e)
+                }
+
+                // -- Portrait Picture -- //
+                try {
+                    val dg5In: CardFileInputStream = service.getInputStream(PassportService.EF_DG5)
+                    val dg5File = DG5File(dg5In)
+                    val displayedImageInfos = dg5File.images
+                    if (displayedImageInfos.isNotEmpty()) {
+                        val displayedImageInfo: DisplayedImageInfo =
+                            displayedImageInfos.iterator().next()
+                        val image = imageUtil.getImage(mContext, displayedImageInfo)
+                        personDetails.portraitImage = image.bitmapImage
+                        personDetails.portraitImageBase64 = image.base64Image
+                    }
+                } catch (e: java.lang.Exception) {
+                    Log.w("TAG", e)
+                }
+
 //                // -- Signature (if exist) -- //
-//                try {
-//                    val dg7In: CardFileInputStream = service.getInputStream(PassportService.EF_DG7)
-//                    val dg7File: DG7File = DG7File(dg7In)
-//                    val signatureImageInfos: kotlin.collections.List<DisplayedImageInfo> =
-//                        dg7File.getImages()
-//                    if (!signatureImageInfos.isEmpty()) {
-//                        val displayedImageInfo: DisplayedImageInfo =
-//                            signatureImageInfos.iterator().next()
-//                        val image: Image =
-//                            ImageUtil.getImage(this@NfcScanActivity, displayedImageInfo)
-//                        //                        personDetails.setPortraitImage(image.getBitmapImage());
-////                        personDetails.setPortraitImageBase64(image.getBase64Image());
-//                    }
-//                } catch (e: java.lang.Exception) {
-//                    android.util.Log.w(TAG, e)
-//                }
-//
-//                // -- Additional Details (if exist) -- //
-//                try {
-//                    val dg11In: CardFileInputStream =
-//                        service.getInputStream(PassportService.EF_DG11)
-//                    val dg11File: DG11File = DG11File(dg11In)
-//                    if (dg11File.getLength() > 0) {
-//                        additionalPersonDetails.setCustodyInformation(dg11File.getCustodyInformation())
-//                        additionalPersonDetails.setNameOfHolder(dg11File.getNameOfHolder())
-//                        additionalPersonDetails.setFullDateOfBirth(dg11File.getFullDateOfBirth())
-//                        additionalPersonDetails.setOtherNames(dg11File.getOtherNames())
-//                        additionalPersonDetails.setOtherValidTDNumbers(dg11File.getOtherValidTDNumbers())
-//                        additionalPersonDetails.setPermanentAddress(dg11File.getPermanentAddress())
-//                        additionalPersonDetails.setPersonalNumber(dg11File.getPersonalNumber())
-//                        additionalPersonDetails.setPersonalSummary(dg11File.getPersonalSummary())
-//                        additionalPersonDetails.setPlaceOfBirth(dg11File.getPlaceOfBirth())
-//                        additionalPersonDetails.setProfession(dg11File.getProfession())
-//                        additionalPersonDetails.setProofOfCitizenship(dg11File.getProofOfCitizenship())
-//                        additionalPersonDetails.setTag(dg11File.getTag())
-//                        additionalPersonDetails.setTagPresenceList(dg11File.getTagPresenceList())
-//                        additionalPersonDetails.setTelephone(dg11File.getTelephone())
-//                        additionalPersonDetails.setTitle(dg11File.getTitle())
-//                    }
-//                } catch (e: java.lang.Exception) {
-//                    android.util.Log.w(TAG, e)
-//                }
-//
-//                // -- Document Public Key -- //
-//                try {
-//                    val dg15In: CardFileInputStream =
-//                        service.getInputStream(PassportService.EF_DG15)
-//                    val dg15File: DG15File = DG15File(dg15In)
-//                    val publicKey: java.security.PublicKey = dg15File.getPublicKey()
-//                    //                    eDocument.setDocPublicKey(publicKey);
-//                } catch (e: java.lang.Exception) {
-//                    android.util.Log.w(TAG, e)
-//                }
+                try {
+                    val dg7In: CardFileInputStream = service.getInputStream(PassportService.EF_DG7)
+                    val dg7File = DG7File(dg7In)
+                    val signatureImageInfos = dg7File.images
+                    if (signatureImageInfos.isNotEmpty()) {
+                        val displayedImageInfo: DisplayedImageInfo =
+                            signatureImageInfos.iterator().next()
+                        val image = imageUtil.getImage(mContext, displayedImageInfo)
+                        personDetails.portraitImage = image.bitmapImage
+                        personDetails.portraitImageBase64 = image.base64Image
+                    }
+                } catch (e: java.lang.Exception) {
+                    Log.w("TAG", e)
+                }
+
+                // -- Additional Details (if exist) -- //
+                try {
+                    val dg11In = service.getInputStream(PassportService.EF_DG11)
+                    val dg11File = DG11File(dg11In)
+                    if (dg11File.length > 0) {
+                        additionalPersonDetails.custodyInformation = dg11File.custodyInformation
+                        additionalPersonDetails.nameOfHolder = dg11File.nameOfHolder
+                        additionalPersonDetails.fullDateOfBirth = dg11File.fullDateOfBirth
+                        additionalPersonDetails.otherNames = dg11File.otherNames
+                        additionalPersonDetails.otherValidTDNumbers = dg11File.otherValidTDNumbers
+                        additionalPersonDetails.permanentAddress = dg11File.permanentAddress
+                        additionalPersonDetails.personalNumber = dg11File.personalNumber
+                        additionalPersonDetails.personalSummary = dg11File.personalSummary
+                        additionalPersonDetails.placeOfBirth = dg11File.placeOfBirth
+                        additionalPersonDetails.profession = dg11File.profession
+                        additionalPersonDetails.proofOfCitizenship = dg11File.proofOfCitizenship
+                        additionalPersonDetails.tag = dg11File.tag
+                        additionalPersonDetails.tagPresenceList = dg11File.tagPresenceList
+                        additionalPersonDetails.telephone = dg11File.telephone
+                        additionalPersonDetails.title = dg11File.title
+                    }
+                } catch (e: java.lang.Exception) {
+                    Log.w("TAG", e)
+                }
 
                 eDocument.setPersonDetails(personDetails)
                 eDocument.setAdditionalPersonDetails(additionalPersonDetails)
@@ -329,11 +333,9 @@ class NfcScanActivity : AppCompatActivity() {
                 intent.putExtra("EDOCUMENT", eDocument)
                 mContext.startActivity(intent)
             } else {
-//                Snackbar.make(mainLayout, exception.getLocalizedMessage(), Snackbar.LENGTH_LONG).show();
-                android.util.Log.d("onPostExecute", exception.toString())
+                Log.d("onPostExecute", exception.toString())
             }
         }
-
 
     }
 }
