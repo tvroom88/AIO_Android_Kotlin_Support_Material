@@ -11,7 +11,6 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.util.Rational
 import android.view.View
-import android.view.ViewGroup
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -47,7 +46,6 @@ class MainActivity : AppCompatActivity() {
 
     private var mX: Float = 0F
     private var mY: Float = 0F
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,7 +89,6 @@ class MainActivity : AppCompatActivity() {
         captureBtn.setOnClickListener {
             takeAndProcessImage()
         }
-
 
         // Request camera permissions
         if (allPermissionsGranted()) {
