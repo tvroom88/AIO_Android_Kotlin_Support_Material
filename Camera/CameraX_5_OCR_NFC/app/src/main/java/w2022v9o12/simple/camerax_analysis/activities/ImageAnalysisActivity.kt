@@ -202,6 +202,8 @@ class ImageAnalysisActivity : AppCompatActivity() {
                 }
                 lineTexts[0] = lineTexts[1]
                 lineTexts[1] = curText
+
+                Log.d("curTextcurText", curText)
                 parseMRZ()
                 curText = ""
             }
@@ -248,8 +250,6 @@ class ImageAnalysisActivity : AppCompatActivity() {
             Log.d("PassportMRZ", "PassportMRZ Error")
             return
         }
-
-        //line2
 
         //line2
         pattern = Pattern.compile(TD3_LINE2_REGEX_STR)
@@ -301,13 +301,14 @@ class ImageAnalysisActivity : AppCompatActivity() {
         Log.d("MRZ_Result", mrzResult.gender!!)
         Log.d("MRZ_Result", mrzResult.dateOfExpiration!!)
 
-        val mrzInfo = buildTempMrz(mrzResult.docId, mrzResult.dateOfBirth, mrzResult.dateOfExpiration)
+        val mrzInfo =
+            buildTempMrz(mrzResult.docId, mrzResult.dateOfBirth, mrzResult.dateOfExpiration)
         if (isMrzValid(mrzInfo!!) && count < 1) {
             val intent = Intent(this, NfcScanActivity::class.java)
             intent.putExtra(MRZ_RESULT, mrzInfo)
             val application: MainApplication = applicationContext as MainApplication
 
-            if(mBitmap.width > mBitmap.height){
+            if (mBitmap.width > mBitmap.height) {
                 mBitmap = rotateTheImage(90, mBitmap)
             }
             application.mBitmap = mBitmap

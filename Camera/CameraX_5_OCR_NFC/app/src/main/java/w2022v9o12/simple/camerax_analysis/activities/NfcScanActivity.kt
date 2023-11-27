@@ -1,10 +1,12 @@
 package w2022v9o12.simple.camerax_analysis.activities
 
+import android.app.Activity
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.nfc.NfcAdapter
+import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.AsyncTask
 import android.os.Bundle
@@ -40,9 +42,8 @@ import w2022v9o12.simple.camerax_analysis.model.EDocument
 import w2022v9o12.simple.camerax_analysis.model.Image
 import w2022v9o12.simple.camerax_analysis.model.ImageUtil
 import w2022v9o12.simple.camerax_analysis.model.PersonDetails
-import java.util.Date
 
-class NfcScanActivity : AppCompatActivity() {
+class NfcScanActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     private val TAG = NfcScanActivity::class.java.simpleName
 
@@ -61,6 +62,9 @@ class NfcScanActivity : AppCompatActivity() {
 
     private lateinit var imageView: ImageView
     private lateinit var mContext: Context
+    private lateinit var mActivity: Activity
+
+    private lateinit var application: MainApplication
 
     companion object {
         val EDOCUMENT = "EDOCUMENT"
@@ -76,44 +80,89 @@ class NfcScanActivity : AppCompatActivity() {
 
         imageView = findViewById(R.id.imageView)
 
-
         // CaptuerActivity로 부터 받은 데이터 추출
-        val intent: Intent = getIntent()
+        val intent: Intent = intent
         mrzInfo = (intent.getSerializableExtra(MRZ_RESULT) as MRZInfo?)!!
-        val application: MainApplication = applicationContext as MainApplication
+
+        application = applicationContext as MainApplication
         imageView.setImageBitmap(application.mBitmap)
 
         adapter = NfcAdapter.getDefaultAdapter(this)
         setMrzData(mrzInfo)
     }
 
+    override fun onStart() {
+        super.onStart()
+        Log.d("123123123", "NfcScanActivity - onStart")
+        application.nfcIsRunning = true
+    }
+
     override fun onResume() {
         super.onResume()
+        Log.d("123123123", "NfcScanActivity - onResume")
+        enableNfc()
+
         if (adapter == null) {
             // 기기가 NFC를 지원하지 않음.
             Toast.makeText(this, "NFC 기능이 없어서 사용할 수가 없습니다..", Toast.LENGTH_SHORT).show()
-        } else if (!adapter.isEnabled()) {
-            // NFC가 비활성화되어 있음
-            val intent = Intent(android.provider.Settings.ACTION_NFC_SETTINGS)
-            startActivity(intent)
-        } else {
-            // NFC가 켜져있음
-            val intent: Intent = Intent(applicationContext, this.javaClass)
-            intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-            val pendingIntent: PendingIntent =
-                PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_MUTABLE)
-            val filter: Array<Array<String>> = arrayOf(arrayOf("android.nfc.tech.IsoDep"))
-            adapter.enableForegroundDispatch(this, pendingIntent, null, filter)
+        } else{
+            if (!adapter.isEnabled) {
+                // NFC가 비활성화되어 있음
+                val intent = Intent(android.provider.Settings.ACTION_NFC_SETTINGS)
+                startActivity(intent)
+            } else {
+                // NFC가 켜져있음
+//                val intent: Intent = Intent(applicationContext, this.javaClass)
+//                intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+//                val pendingIntent: PendingIntent =
+//                    PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_MUTABLE)
+//                val filter: Array<Array<String>> = arrayOf(arrayOf("android.nfc.tech.IsoDep"))
+//                adapter.enableForegroundDispatch(this, pendingIntent, null, filter)
+            }
         }
-    }
 
+    }
 
     override fun onPause() {
         super.onPause()
-        if (adapter != null) {
-            adapter.disableForegroundDispatch(this) //nfc 비활성화
+//        adapter.disableForegroundDispatch(this)
+//        if (adapter != null)
+//            adapter.disableReaderMode(this);
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d("123123123", "NfcScanActivity - onStop")
+        application.nfcIsRunning = false
+    }
+
+    private fun enableNfc() {
+        if (adapter != null && adapter.isEnabled) {
+
+            // Work around some buggy hardware that checks for cards too fast
+            val options = Bundle()
+            options.putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, 1000)
+
+            // Listen for all types of card when this App is in the foreground
+            // Turn platform sounds off as they misdirect users when writing to the card
+            // Turn of the platform decoding any NDEF data
+            adapter.enableReaderMode(
+                this,
+                this,
+                NfcAdapter.FLAG_READER_NFC_A or
+                        NfcAdapter.FLAG_READER_NFC_B or
+                        NfcAdapter.FLAG_READER_NFC_F or
+                        NfcAdapter.FLAG_READER_NFC_V or
+                        NfcAdapter.FLAG_READER_NFC_BARCODE or
+                        NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK or
+                        NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS,
+                options
+            )
+        } else {
+            // Tell the user to turn NFC on if App requires it
         }
     }
+
 
     private fun setMrzData(mrzInfo: MRZInfo?) {
         if (mrzInfo != null) {
@@ -130,16 +179,18 @@ class NfcScanActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         Log.d("onPostExecute", "onPostExecute111")
-        if ((NfcAdapter.ACTION_TECH_DISCOVERED == intent.getAction())) {
-            val tag: android.nfc.Tag? = intent.extras?.getParcelable(NfcAdapter.EXTRA_TAG)
+        Log.d("onPostExecute", "good : " + application.nfcIsRunning)
+
+        if (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action) {
+            val tag: Tag? = intent.extras?.getParcelable(NfcAdapter.EXTRA_TAG)
             if (tag != null) {
-                if (listOf(*tag.techList).contains("android.nfc.tech.IsoDep")) {
-                    if (((passportNumber == "") && !passportNumber.isEmpty()
-                                && (expirationDate == "") && !expirationDate.isEmpty()
-                                && (birthDate == "") && !birthDate.isEmpty())
+                if (listOf(*tag.techList).contains("android.nfc.tech.IsoDep") && application.nfcIsRunning) {
+                    if (((passportNumber != "") && !passportNumber.isEmpty()
+                                && (expirationDate != "") && !expirationDate.isEmpty()
+                                && (birthDate != "") && !birthDate.isEmpty())
                     ) {
                         val bacKey: BACKeySpec = BACKey(passportNumber, birthDate, expirationDate)
-//                       ReadTask(IsoDep.get(tag), bacKey).execute()
+                        ReadTask(IsoDep.get(tag), bacKey, this).execute()
 
                     } else {
                         Log.d("onPostExecute", "onPostExecute444")
@@ -153,10 +204,30 @@ class NfcScanActivity : AppCompatActivity() {
         }
     }
 
-    private class ReadTask private constructor(
+    override fun onTagDiscovered(tag: Tag?) {
+        Toast.makeText(this, "I am here", Toast.LENGTH_SHORT).show()
+        if (tag != null) {
+            if (listOf(*tag.techList).contains("android.nfc.tech.IsoDep") && application.nfcIsRunning) {
+                if (((passportNumber != "") && !passportNumber.isEmpty()
+                            && (expirationDate != "") && !expirationDate.isEmpty()
+                            && (birthDate != "") && !birthDate.isEmpty())
+                ) {
+                    val bacKey: BACKeySpec = BACKey(passportNumber, birthDate, expirationDate)
+                    ReadTask(IsoDep.get(tag), bacKey, this).execute()
+
+                } else {
+                    Log.d("onPostExecute", "onPostExecute444")
+                }
+            } else {
+                Log.d("onPostExecute", "onPostExecute333")
+            }
+        }
+    }
+
+    class ReadTask constructor(
         private val isoDep: IsoDep,
         private val bacKey: BACKeySpec,
-        val mContext: Context
+        val mContext: Context,
     ) : AsyncTask<Void?, Void?, Exception?>() {
         var eDocument: EDocument = EDocument()
         var personDetails: PersonDetails = PersonDetails()
@@ -336,6 +407,6 @@ class NfcScanActivity : AppCompatActivity() {
                 Log.d("onPostExecute", exception.toString())
             }
         }
-
     }
+
 }

@@ -8,8 +8,5 @@ import java.security.Security
 class MainApplication : Application() {
 
     var mBitmap: Bitmap? = null
-    override fun onCreate() {
-        super.onCreate()
-//        Security.insertProviderAt(BouncyCastleProvider(), 1)
-    }
+    var nfcIsRunning: Boolean = true
 }
