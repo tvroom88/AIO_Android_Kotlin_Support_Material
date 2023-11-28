@@ -6,26 +6,22 @@
     android:layout_height="match_parent"
     tools:context=".activities.ImageAnalysisActivity">
 
-    <androidx.camera.view.PreviewView
-        android:id="@+id/viewFinder"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
-        app:layout_constraintTop_toTopOf="parent">
+    <FrameLayout
+        android:id="@+id/frameLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    </androidx.camera.view.PreviewView>
+    <View
+        android:id="@+id/passport"
+        android:layout_width="332dp"
+        android:layout_height="236dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/linearLayout"
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <TextView
-            android:id="@+id/textView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

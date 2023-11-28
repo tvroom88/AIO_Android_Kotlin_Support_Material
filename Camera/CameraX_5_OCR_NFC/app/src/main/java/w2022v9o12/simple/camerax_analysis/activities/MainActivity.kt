@@ -1,6 +1,5 @@
 package w2022v9o12.simple.camerax_analysis.activities
 
-
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity

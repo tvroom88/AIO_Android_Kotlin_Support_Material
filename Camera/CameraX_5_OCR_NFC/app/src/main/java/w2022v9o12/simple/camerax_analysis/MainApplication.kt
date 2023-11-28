@@ -6,7 +6,5 @@ import org.spongycastle.jce.provider.BouncyCastleProvider
 import java.security.Security
 
 class MainApplication : Application() {
-
     var mBitmap: Bitmap? = null
-    var nfcIsRunning: Boolean = true
 }

@@ -8,7 +8,10 @@ import android.graphics.Matrix
 import android.media.Image
 import android.os.Build
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.util.Log
+import android.util.Rational
+import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -16,10 +19,12 @@ import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
+import androidx.camera.core.UseCaseGroup
+import androidx.camera.core.ViewPort
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
@@ -30,6 +35,7 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import net.sf.scuba.data.Gender
 import org.jmrtd.lds.icao.MRZInfo
 import w2022v9o12.simple.camerax_analysis.MainApplication
+import w2022v9o12.simple.camerax_analysis.R
 import w2022v9o12.simple.camerax_analysis.databinding.ActivityImageAnalysisBinding
 import w2022v9o12.simple.camerax_analysis.model.MRZResult
 import java.util.concurrent.ExecutorService
@@ -41,10 +47,11 @@ class ImageAnalysisActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityImageAnalysisBinding
 
     // CameraX 관련 필드들
-    private var imageCapture: ImageCapture? = null
-    private var imageAnalysis: ImageAnalysis? = null
+    private lateinit var imageAnalysis: ImageAnalysis
     private val mRatio = AspectRatio.RATIO_16_9
     private lateinit var cameraExecutor: ExecutorService
+
+    private lateinit var mCustomPreview: PreviewView
 
     // OCR 관련 필드
     private var textRecognizer: TextRecognizer? = null
@@ -93,6 +100,34 @@ class ImageAnalysisActivity : AppCompatActivity() {
         viewBinding = ActivityImageAnalysisBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
+        viewBinding.passport.background = ContextCompat.getDrawable(this, R.drawable.passport_guideline_horizontal)
+
+        //스크린 화면을 기준으로 16:9를 맞출 생각이다. 그래서 동적으로 넣어주기 위한 부분
+        val displayMetrics = DisplayMetrics()
+        windowManager.defaultDisplay.getMetrics(displayMetrics)
+
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+
+        mCustomPreview = PreviewView(this)
+        val frameLayoutParams: FrameLayout.LayoutParams?
+        val flag: Boolean = (screenWidth / 9 * 16) < screenHeight
+
+        if (flag) {
+            frameLayoutParams = FrameLayout.LayoutParams(
+                screenWidth,
+                screenWidth / 9 * 16
+            )
+        } else {
+            frameLayoutParams = FrameLayout.LayoutParams(
+                screenHeight / 16 * 9,
+                screenHeight
+            )
+        }
+
+        mCustomPreview.layoutParams = frameLayoutParams
+        viewBinding.frameLayout.addView(mCustomPreview)
+
         // Request camera permissions
         if (allPermissionsGranted()) {
             startCamera()
@@ -115,14 +150,11 @@ class ImageAnalysisActivity : AppCompatActivity() {
 
             // Preview
             val preview = Preview.Builder()
-                .build()
-                .also {
-                    it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
-                }
-
-            imageCapture = ImageCapture.Builder()
                 .setTargetAspectRatio(mRatio)
                 .build()
+                .also {
+                    it.setSurfaceProvider(mCustomPreview.surfaceProvider)
+                }
 
             imageAnalysis = ImageAnalysis.Builder()
                 .setTargetAspectRatio(mRatio)
@@ -134,13 +166,26 @@ class ImageAnalysisActivity : AppCompatActivity() {
             // Select back camera as a default
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
+            val aspectRatio = Rational(9, 16)
+
+            val viewPort: ViewPort = ViewPort.Builder(
+                aspectRatio,
+                mCustomPreview.display.rotation
+            ).setScaleType(ViewPort.FIT).build()
+
+            val useCaseGroupBuilder: UseCaseGroup.Builder = UseCaseGroup.Builder()
+                .setViewPort(viewPort)
+                .addUseCase(preview)
+                .addUseCase(imageAnalysis)
+
             try {
                 // Unbind use cases before rebinding
                 cameraProvider.unbindAll()
 
                 // Bind use cases to camera
-                cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageAnalysis, imageCapture
+                val mCamera = cameraProvider.bindToLifecycle(
+                    this, cameraSelector,
+                    useCaseGroupBuilder.build()
                 )
 
             } catch (exc: Exception) {

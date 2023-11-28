@@ -1,6 +1,6 @@
 package w2022v9o12.simple.camerax_analysis.activities
 
-import android.app.Activity
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -11,8 +11,10 @@ import android.nfc.tech.IsoDep
 import android.os.AsyncTask
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import net.sf.scuba.smartcards.CardFileInputStream
@@ -36,6 +38,8 @@ import org.jmrtd.lds.iso19794.FaceInfo
 import org.jmrtd.lds.iso19794.FingerImageInfo
 import w2022v9o12.simple.camerax_analysis.MainApplication
 import w2022v9o12.simple.camerax_analysis.R
+import w2022v9o12.simple.camerax_analysis.databinding.ActivityImageAnalysisBinding
+import w2022v9o12.simple.camerax_analysis.databinding.ActivityNfcScanBinding
 import w2022v9o12.simple.camerax_analysis.model.AdditionalPersonDetails
 import w2022v9o12.simple.camerax_analysis.model.DateUtil
 import w2022v9o12.simple.camerax_analysis.model.EDocument
@@ -43,14 +47,12 @@ import w2022v9o12.simple.camerax_analysis.model.Image
 import w2022v9o12.simple.camerax_analysis.model.ImageUtil
 import w2022v9o12.simple.camerax_analysis.model.PersonDetails
 
-class NfcScanActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
+class NfcScanActivity : AppCompatActivity() {
 
-    private val TAG = NfcScanActivity::class.java.simpleName
-
-    private val MRZ_RESULT = "MRZ_RESULT"
+    private lateinit var viewBinding: ActivityNfcScanBinding
 
     private lateinit var adapter: NfcAdapter
-    private lateinit var mrzInfo: MRZInfo
+    private var mrzInfo: MRZInfo? = null
 
     private lateinit var passportNumberEditText: EditText
     private lateinit var expirationDateEditText: EditText
@@ -61,166 +63,103 @@ class NfcScanActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     private var birthDate = ""
 
     private lateinit var imageView: ImageView
-    private lateinit var mContext: Context
-    private lateinit var mActivity: Activity
 
     private lateinit var application: MainApplication
 
     companion object {
-        val EDOCUMENT = "EDOCUMENT"
+        @SuppressLint("StaticFieldLeak")
+        private lateinit var progressBar: ProgressBar
+        private const val MRZ_RESULT = "MRZ_RESULT"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_nfc_scan)
+        viewBinding = ActivityNfcScanBinding.inflate(layoutInflater)
+        setContentView(viewBinding.root)
 
         passportNumberEditText = findViewById(R.id.passportNumberEditText)
         expirationDateEditText = findViewById(R.id.expirationDateEditText)
         birthDateEditText = findViewById(R.id.birthDateEditText)
 
         imageView = findViewById(R.id.imageView)
+        progressBar = findViewById(R.id.progressBar)
 
         // CaptuerActivity로 부터 받은 데이터 추출
         val intent: Intent = intent
-        mrzInfo = (intent.getSerializableExtra(MRZ_RESULT) as MRZInfo?)!!
+
+        if (intent.getSerializableExtra(MRZ_RESULT) != null) {
+            mrzInfo = (intent.getSerializableExtra(MRZ_RESULT) as MRZInfo?)!!
+            passportNumber = mrzInfo!!.documentNumber
+            expirationDate = mrzInfo!!.dateOfExpiry
+            birthDate = mrzInfo!!.dateOfBirth
+            viewBinding.passportNumberEditText.setText(passportNumber)
+            viewBinding.expirationDateEditText.setText(expirationDate)
+            viewBinding.birthDateEditText.setText(birthDate)
+        }
+
 
         application = applicationContext as MainApplication
         imageView.setImageBitmap(application.mBitmap)
 
         adapter = NfcAdapter.getDefaultAdapter(this)
-        setMrzData(mrzInfo)
+
     }
 
     override fun onStart() {
         super.onStart()
         Log.d("123123123", "NfcScanActivity - onStart")
-        application.nfcIsRunning = true
     }
 
     override fun onResume() {
         super.onResume()
         Log.d("123123123", "NfcScanActivity - onResume")
-        enableNfc()
 
         if (adapter == null) {
             // 기기가 NFC를 지원하지 않음.
             Toast.makeText(this, "NFC 기능이 없어서 사용할 수가 없습니다..", Toast.LENGTH_SHORT).show()
-        } else{
-            if (!adapter.isEnabled) {
-                // NFC가 비활성화되어 있음
-                val intent = Intent(android.provider.Settings.ACTION_NFC_SETTINGS)
-                startActivity(intent)
-            } else {
-                // NFC가 켜져있음
-//                val intent: Intent = Intent(applicationContext, this.javaClass)
-//                intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-//                val pendingIntent: PendingIntent =
-//                    PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_MUTABLE)
-//                val filter: Array<Array<String>> = arrayOf(arrayOf("android.nfc.tech.IsoDep"))
-//                adapter.enableForegroundDispatch(this, pendingIntent, null, filter)
-            }
+        } else if (!adapter.isEnabled) {
+            // NFC가 비활성화되어 있음
+            val intent = Intent(android.provider.Settings.ACTION_NFC_SETTINGS)
+            startActivity(intent)
+        } else {
+            // NFC가 켜져있음
+            val intent = Intent(applicationContext, this.javaClass)
+            intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+            val pendingIntent: PendingIntent =
+                PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_MUTABLE)
+            val filter: Array<Array<String>> = arrayOf(arrayOf("android.nfc.tech.IsoDep"))
+            adapter.enableForegroundDispatch(this, pendingIntent, null, filter)
         }
-
     }
 
     override fun onPause() {
         super.onPause()
-//        adapter.disableForegroundDispatch(this)
-//        if (adapter != null)
-//            adapter.disableReaderMode(this);
-    }
-
-    override fun onStop() {
-        super.onStop()
-        Log.d("123123123", "NfcScanActivity - onStop")
-        application.nfcIsRunning = false
-    }
-
-    private fun enableNfc() {
-        if (adapter != null && adapter.isEnabled) {
-
-            // Work around some buggy hardware that checks for cards too fast
-            val options = Bundle()
-            options.putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, 1000)
-
-            // Listen for all types of card when this App is in the foreground
-            // Turn platform sounds off as they misdirect users when writing to the card
-            // Turn of the platform decoding any NDEF data
-            adapter.enableReaderMode(
-                this,
-                this,
-                NfcAdapter.FLAG_READER_NFC_A or
-                        NfcAdapter.FLAG_READER_NFC_B or
-                        NfcAdapter.FLAG_READER_NFC_F or
-                        NfcAdapter.FLAG_READER_NFC_V or
-                        NfcAdapter.FLAG_READER_NFC_BARCODE or
-                        NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK or
-                        NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS,
-                options
-            )
-        } else {
-            // Tell the user to turn NFC on if App requires it
-        }
-    }
-
-
-    private fun setMrzData(mrzInfo: MRZInfo?) {
-        if (mrzInfo != null) {
-            passportNumber = mrzInfo.documentNumber
-            expirationDate = mrzInfo.dateOfExpiry
-            birthDate = mrzInfo.dateOfBirth
-            passportNumberEditText.setText(passportNumber)
-            expirationDateEditText.setText(expirationDate)
-            birthDateEditText.setText(birthDate)
-        }
+        if (adapter != null)
+            adapter.disableForegroundDispatch(this)
 
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        Log.d("onPostExecute", "onPostExecute111")
-        Log.d("onPostExecute", "good : " + application.nfcIsRunning)
-
         if (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action) {
             val tag: Tag? = intent.extras?.getParcelable(NfcAdapter.EXTRA_TAG)
             if (tag != null) {
-                if (listOf(*tag.techList).contains("android.nfc.tech.IsoDep") && application.nfcIsRunning) {
+                if (listOf(*tag.techList).contains("android.nfc.tech.IsoDep")) {
                     if (((passportNumber != "") && !passportNumber.isEmpty()
                                 && (expirationDate != "") && !expirationDate.isEmpty()
                                 && (birthDate != "") && !birthDate.isEmpty())
                     ) {
                         val bacKey: BACKeySpec = BACKey(passportNumber, birthDate, expirationDate)
                         ReadTask(IsoDep.get(tag), bacKey, this).execute()
-
                     } else {
-                        Log.d("onPostExecute", "onPostExecute444")
+                        Log.d("onNewIntent", "onPostExecute111")
                     }
                 } else {
-                    Log.d("onPostExecute", "onPostExecute333")
+                    Log.d("onNewIntent", "onPostExecute222")
                 }
             }
         } else {
-            Log.d("onPostExecute", "onPostExecute222")
-        }
-    }
-
-    override fun onTagDiscovered(tag: Tag?) {
-        Toast.makeText(this, "I am here", Toast.LENGTH_SHORT).show()
-        if (tag != null) {
-            if (listOf(*tag.techList).contains("android.nfc.tech.IsoDep") && application.nfcIsRunning) {
-                if (((passportNumber != "") && !passportNumber.isEmpty()
-                            && (expirationDate != "") && !expirationDate.isEmpty()
-                            && (birthDate != "") && !birthDate.isEmpty())
-                ) {
-                    val bacKey: BACKeySpec = BACKey(passportNumber, birthDate, expirationDate)
-                    ReadTask(IsoDep.get(tag), bacKey, this).execute()
-
-                } else {
-                    Log.d("onPostExecute", "onPostExecute444")
-                }
-            } else {
-                Log.d("onPostExecute", "onPostExecute333")
-            }
+            Log.d("onNewIntent", "onPostExecute333")
         }
     }
 
@@ -234,6 +173,12 @@ class NfcScanActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         var additionalPersonDetails: AdditionalPersonDetails = AdditionalPersonDetails()
         val dateUtil = DateUtil()
         val imageUtil = ImageUtil()
+
+        override fun onPreExecute() {
+            super.onPreExecute()
+            progressBar.visibility = View.VISIBLE
+        }
+
         override fun doInBackground(vararg params: Void?): Exception? {
             try {
                 val cardService: CardService = CardService.getInstance(isoDep)
@@ -398,7 +343,7 @@ class NfcScanActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
 
         override fun onPostExecute(exception: Exception?) {
-            Log.d("onPostExecute", "onPostExecute555")
+            progressBar.visibility = View.INVISIBLE
             if (exception == null) {
                 val intent = Intent(mContext, ResultActivity::class.java)
                 intent.putExtra("EDOCUMENT", eDocument)
