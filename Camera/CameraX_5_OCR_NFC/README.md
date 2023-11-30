@@ -5,16 +5,6 @@
 
 #### 설명 : [https://from-android-to-server.tistory.com/80](https://from-android-to-server.tistory.com/81)
 
-<br/>
-
-### 첫화면  /  사진을 찍어서 하나의 이미지로 Text를 분석하는 화면
-
-
-<br/>
-
-### 실시간 Analysis에서 넘어오는 이미지로 Text를 분석하는 화면
-
-https://github.com/tvroom88/AIO_Android_Kotlin_Support_Material/assets/4710854/05b111e4-66cd-477c-b17a-b80e942a09ac
 
 
 
