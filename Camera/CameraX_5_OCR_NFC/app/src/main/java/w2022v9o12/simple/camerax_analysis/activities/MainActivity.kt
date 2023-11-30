@@ -13,7 +13,7 @@ class MainActivity : AppCompatActivity() {
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
-        viewBinding.imageAnalysisButton.setOnClickListener{
+        viewBinding.imageAnalysisButton.setOnClickListener {
             val intent = Intent(this, ImageAnalysisActivity::class.java)
             startActivity(intent)
         }

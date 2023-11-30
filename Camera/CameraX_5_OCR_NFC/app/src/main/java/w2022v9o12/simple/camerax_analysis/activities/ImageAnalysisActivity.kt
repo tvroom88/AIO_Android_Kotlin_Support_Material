@@ -1,6 +1,7 @@
 package w2022v9o12.simple.camerax_analysis.activities
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -11,6 +12,8 @@ import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
 import android.util.Rational
+import android.view.View
+import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -38,6 +41,7 @@ import w2022v9o12.simple.camerax_analysis.MainApplication
 import w2022v9o12.simple.camerax_analysis.R
 import w2022v9o12.simple.camerax_analysis.databinding.ActivityImageAnalysisBinding
 import w2022v9o12.simple.camerax_analysis.model.MRZResult
+import java.io.ByteArrayOutputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.regex.Pattern
@@ -55,6 +59,9 @@ class ImageAnalysisActivity : AppCompatActivity() {
 
     // OCR 관련 필드
     private var textRecognizer: TextRecognizer? = null
+
+    private var mX: Float = 0F
+    private var mY: Float = 0F
 
     // 여권 MRZ를 판단하는 정규식
     val TD3_LINE1_REGEX = "P[A-Z<]([A-Z]{3})([A-Z<]*[A-Z])<<([A-Z<]*[A-Z])<*".toRegex()
@@ -100,7 +107,12 @@ class ImageAnalysisActivity : AppCompatActivity() {
         viewBinding = ActivityImageAnalysisBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
-        viewBinding.passport.background = ContextCompat.getDrawable(this, R.drawable.passport_guideline_horizontal)
+//        viewBinding.passport.background =
+//            ContextCompat.getDrawable(this, R.drawable.passport_guideline_horizontal)
+//
+//        viewBinding.mrz.background =
+//            ContextCompat.getDrawable(this, R.drawable.passport_guideline_horizontal)
+
 
         //스크린 화면을 기준으로 16:9를 맞출 생각이다. 그래서 동적으로 넣어주기 위한 부분
         val displayMetrics = DisplayMetrics()
@@ -139,6 +151,17 @@ class ImageAnalysisActivity : AppCompatActivity() {
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+
+        viewBinding.mrz.viewTreeObserver
+            .addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    // 좌표 가져오기
+                    mX = viewBinding.mrz.x
+                    mY = viewBinding.mrz.y
+
+                    viewBinding.mrz.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                }
+            })
     }
 
     private fun startCamera() {
@@ -208,17 +231,41 @@ class ImageAnalysisActivity : AppCompatActivity() {
         @ExperimentalGetImage
         val mediaImage: Image? = imageProxy.image
         if (mediaImage != null) {
-            val image = InputImage.fromMediaImage(
-                mediaImage,
+
+            var tempBitmap = imageProxy.toBitmap()
+            if (tempBitmap.width > tempBitmap.height) {
+                tempBitmap = rotateTheImage(90, tempBitmap)
+            }
+
+            tempBitmap = Bitmap.createScaledBitmap(
+                tempBitmap,
+                mCustomPreview.width,
+                mCustomPreview.height,
+                false
+            )
+
+            var passportBitmap = cropImageSecondImage(tempBitmap, viewBinding.passport)
+            var mrzBitmap = cropImageSecondImage(tempBitmap, viewBinding.mrz)
+
+//            var passportBitmap = cropImage(tempBitmap, viewBinding.passport)
+//            var mrzBitmap = cropImage(tempBitmap, viewBinding.mrz)
+
+//            val image = InputImage.fromMediaImage(
+//                mediaImage,
+//                imageProxy.imageInfo.rotationDegrees
+//            )
+            val image = InputImage.fromBitmap(
+                mrzBitmap,
                 imageProxy.imageInfo.rotationDegrees
             )
+
 
             // [START run_detector]
             textRecognizer!!.process(image)
                 .addOnSuccessListener { visionText ->
                     run {
                         processTextBlock(visionText)
-                        mBitmap = imageProxy.toBitmap()
+                        mBitmap = passportBitmap
                     }
                 }
                 .addOnCompleteListener { imageProxy.close() }
@@ -230,6 +277,45 @@ class ImageAnalysisActivity : AppCompatActivity() {
                 }
             // [END run_detector]
         }
+    }
+
+    @SuppressLint("RestrictedApi")
+    private fun cropImage(
+        bitmap: Bitmap,
+        frame: View
+    ): Bitmap {
+        val startXPoint = bitmap.width / 2 - frame.width / 2
+        val startYPoint = bitmap.height / 2 - frame.height / 2
+        return Bitmap.createBitmap(bitmap, startXPoint, startYPoint, frame.width, frame.height)
+    }
+
+    @SuppressLint("RestrictedApi")
+    private fun cropImageSecondImage(
+        bitmap: Bitmap,
+        reference: View
+    ): Bitmap {
+
+        Log.d("cropImageSecondImage", "reference.x : " + reference.x)
+        Log.d("cropImageSecondImage", "reference.y : " + reference.y)
+        Log.d("cropImageSecondImage", "viewBinding.frameLayout.x : " + viewBinding.frameLayout.x)
+        Log.d("cropImageSecondImage", "viewBinding.frameLayout.y : " + viewBinding.frameLayout.y)
+
+
+        val xInitialPos = (reference.x - viewBinding.frameLayout.x).toInt()
+        val yInitialPos = (reference.y - viewBinding.frameLayout.y).toInt()
+
+        val bitmapFinal = Bitmap.createBitmap(
+            bitmap,
+            xInitialPos, yInitialPos, reference.width, reference.height
+        )
+
+        val stream = ByteArrayOutputStream()
+        bitmapFinal.compress(
+            Bitmap.CompressFormat.PNG,
+            100,
+            stream
+        ) //100 is the best quality possibe
+        return bitmapFinal
     }
 
 
@@ -248,7 +334,10 @@ class ImageAnalysisActivity : AppCompatActivity() {
                 lineTexts[0] = lineTexts[1]
                 lineTexts[1] = curText
 
-                Log.d("curTextcurText", curText)
+                Log.d("curTextcurText", "lineTexts[0] : " + lineTexts[0])
+                Log.d("curTextcurText", "lineTexts[0] : " + lineTexts[1])
+                Log.d("curTextcurText", "-------------------------------")
+
                 parseMRZ()
                 curText = ""
             }
@@ -353,9 +442,6 @@ class ImageAnalysisActivity : AppCompatActivity() {
             intent.putExtra(MRZ_RESULT, mrzInfo)
             val application: MainApplication = applicationContext as MainApplication
 
-            if (mBitmap.width > mBitmap.height) {
-                mBitmap = rotateTheImage(90, mBitmap)
-            }
             application.mBitmap = mBitmap
             startActivity(intent)
             finish()

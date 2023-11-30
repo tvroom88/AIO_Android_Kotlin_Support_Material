@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/black"
     tools:context=".activities.ImageAnalysisActivity">
 
     <FrameLayout
@@ -19,9 +20,22 @@
         android:id="@+id/passport"
         android:layout_width="332dp"
         android:layout_height="236dp"
+        android:background="@drawable/passport_guideline_horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+
+    <View
+        android:id="@+id/mrz"
+        android:layout_width="332dp"
+        android:layout_height="60dp"
+        android:background="@drawable/passport_guideline_horizontal"
+        app:layout_constraintBottom_toBottomOf="@+id/passport"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!--    -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
