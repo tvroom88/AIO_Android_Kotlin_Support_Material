@@ -10,6 +10,9 @@ import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.AsyncTask
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.Log
 import android.view.View
 import android.widget.EditText
@@ -38,7 +41,6 @@ import org.jmrtd.lds.iso19794.FaceInfo
 import org.jmrtd.lds.iso19794.FingerImageInfo
 import w2022v9o12.simple.camerax_analysis.MainApplication
 import w2022v9o12.simple.camerax_analysis.R
-import w2022v9o12.simple.camerax_analysis.databinding.ActivityImageAnalysisBinding
 import w2022v9o12.simple.camerax_analysis.databinding.ActivityNfcScanBinding
 import w2022v9o12.simple.camerax_analysis.model.AdditionalPersonDetails
 import w2022v9o12.simple.camerax_analysis.model.DateUtil
@@ -46,6 +48,7 @@ import w2022v9o12.simple.camerax_analysis.model.EDocument
 import w2022v9o12.simple.camerax_analysis.model.Image
 import w2022v9o12.simple.camerax_analysis.model.ImageUtil
 import w2022v9o12.simple.camerax_analysis.model.PersonDetails
+
 
 class NfcScanActivity : AppCompatActivity() {
 
@@ -139,6 +142,10 @@ class NfcScanActivity : AppCompatActivity() {
 
     }
 
+    fun execute(){
+
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action) {
@@ -162,6 +169,61 @@ class NfcScanActivity : AppCompatActivity() {
             Log.d("onNewIntent", "onPostExecute333")
         }
     }
+
+
+    abstract class ThreadTask<T1, T2> : Runnable {
+        // Argument
+        var mArgument: T1? = null
+
+        // Result
+        var mResult: T2? = null
+
+        // Handle the result
+        val WORK_DONE = 0
+        var mResultHandler: Handler = object : Handler(Looper.getMainLooper()) {
+            override fun handleMessage(msg: Message) {
+                super.handleMessage(msg)
+
+                // Call onPostExecute
+                onPostExecute(mResult)
+            }
+        }
+
+        // Execute
+        fun execute(arg: T1) {
+            // Store the argument
+            mArgument = arg
+
+            // Call onPreExecute
+            onPreExecute()
+
+            // Begin thread work
+            val thread = Thread(this)
+            thread.start()
+        }
+
+        override fun run() {
+            // Call doInBackground
+            mResult = doInBackground(mArgument)
+
+            // Notify main thread that the work is done
+            mResultHandler.sendEmptyMessage(WORK_DONE)
+        }
+
+        // onPreExecute
+        protected abstract fun onPreExecute()
+
+        // doInBackground
+        protected abstract fun doInBackground(arg: T1?): T2
+
+        // onPostExecute
+        protected abstract fun onPostExecute(result: T2?)
+    }
+
+
+
+
+    //-----------------------------------
 
     class ReadTask constructor(
         private val isoDep: IsoDep,
