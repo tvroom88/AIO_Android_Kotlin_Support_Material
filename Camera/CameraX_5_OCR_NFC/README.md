@@ -7,6 +7,8 @@
 
 #### 스크린샷 및 페이지 구성:
 
+#### 1. 진입 페이지, 2. 카메라로 OCR하는 페이지 3. NFC 읽어오는 페이지 4. 결과 페이지 (이부분은 실제여권으로 테스트 해야해서 개인정보 노출을 피하기 위해 생략)
+
 ![KakaoTalk_Image_2023-12-01-22-28-30_001](https://github.com/tvroom88/AIO_Android_Kotlin_Support_Material/assets/4710854/30613e1f-96a1-4c65-aca2-78a81c8c2b62)
 
 ![KakaoTalk_Image_2023-12-01-22-28-30_002](https://github.com/tvroom88/AIO_Android_Kotlin_Support_Material/assets/4710854/4b230cbf-b87c-43cc-b7ba-58599fe6631c)
