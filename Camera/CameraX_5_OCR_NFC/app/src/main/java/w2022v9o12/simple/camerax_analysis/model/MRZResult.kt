@@ -1,6 +1,7 @@
 package w2022v9o12.simple.camerax_analysis.model
 
 class MRZResult {
+
     var docId: String? = null
     var docType: String? = null
     var nationality: String? = null

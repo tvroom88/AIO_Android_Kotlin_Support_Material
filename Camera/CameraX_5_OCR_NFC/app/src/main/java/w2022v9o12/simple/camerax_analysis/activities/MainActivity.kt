@@ -3,6 +3,7 @@ package w2022v9o12.simple.camerax_analysis.activities
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import w2022v9o12.simple.camerax_analysis.MainApplication
 import w2022v9o12.simple.camerax_analysis.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -17,5 +18,11 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, ImageAnalysisActivity::class.java)
             startActivity(intent)
         }
+
+    }
+
+    override fun onStart() {
+        super.onStart()
+        (application as MainApplication).stopNFCReader(this)
     }
 }

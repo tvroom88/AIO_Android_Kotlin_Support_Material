@@ -140,6 +140,6 @@ class ImageUtil {
 }
 
 class Image {
-    public lateinit var bitmapImage: Bitmap
-    public lateinit var base64Image: String
+     lateinit var bitmapImage: Bitmap
+     lateinit var base64Image: String
 }

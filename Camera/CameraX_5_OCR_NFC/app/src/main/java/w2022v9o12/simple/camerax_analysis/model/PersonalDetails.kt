@@ -6,6 +6,7 @@ import java.io.ByteArrayOutputStream
 import java.io.Serializable
 
 class PersonDetails : Serializable {
+    var documentType: String? = null
     var name: String? = null
     var surname: String? = null
     var personalNumber: String? = null
@@ -26,8 +27,6 @@ class PersonDetails : Serializable {
     var faceImageBase64: String? = null
     var portraitImage: Bitmap? = null
     var portraitImageBase64: String? = null
-    var signature: Bitmap? = null
-    var signatureBase64: String? = null
     var fingerprints: List<Bitmap>? = null
 
     private fun byteArrayToBitmap(byteArray: ByteArray): Bitmap {

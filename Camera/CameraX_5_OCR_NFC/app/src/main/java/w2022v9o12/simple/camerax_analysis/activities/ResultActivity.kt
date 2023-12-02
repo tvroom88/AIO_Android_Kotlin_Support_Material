@@ -39,37 +39,14 @@ class ResultActivity : AppCompatActivity() {
         imageUtil = ImageUtil()
         adapter = NfcAdapter.getDefaultAdapter(this)
         setResultToView(eDocument)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        Log.d("123123123", "ResultActivity - onResume")
-        enableNfc()
 
     }
 
-    private fun enableNfc() {
-        if (adapter != null) {
-            // Work around some buggy hardware that checks for cards too fast
-            val options = Bundle()
-            options.putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, 1000)
-
-            adapter.enableReaderMode(
-                this,
-                {},
-                NfcAdapter.FLAG_READER_NFC_A or
-                        NfcAdapter.FLAG_READER_NFC_B or
-                        NfcAdapter.FLAG_READER_NFC_F or
-                        NfcAdapter.FLAG_READER_NFC_V or
-                        NfcAdapter.FLAG_READER_NFC_BARCODE or
-                        NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK or
-                        NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS,
-                options
-            )
-        } else {
-            // Tell the user to turn NFC on if App requires it
-        }
+    override fun onStart() {
+        super.onStart()
+        (application as MainApplication).stopNFCReader(this)
     }
+
 
     override fun onPause() {
         super.onPause()
@@ -85,7 +62,8 @@ class ResultActivity : AppCompatActivity() {
 
         viewBinding.textResult1.text = "NAME: " + eDocument?.getPersonDetails()?.name
         viewBinding.textResult2.text = "SURNAME: " + eDocument?.getPersonDetails()?.surname
-        viewBinding.textResult3.text = "PERSONAL NUMBER: " + eDocument?.getPersonDetails()?.personalNumber
+        viewBinding.textResult3.text =
+            "PERSONAL NUMBER: " + eDocument?.getPersonDetails()?.personalNumber
 
 
         var result = ""
@@ -115,6 +93,17 @@ class ResultActivity : AppCompatActivity() {
 
             """.trimIndent()
 
+
+        result += """
+            ${"Name Of Holder: " + eDocument?.getAdditionalPersonDetail()?.nameOfHolder}
+
+            """.trimIndent()
+
+
+        result += """
+            ${"Tax Or ExitRequirements: " + eDocument?.getAdditionalDocumentDetail()?.taxOrExitRequirements}
+
+            """.trimIndent()
 
         viewBinding.textResult4.text = result
     }

@@ -107,13 +107,6 @@ class ImageAnalysisActivity : AppCompatActivity() {
         viewBinding = ActivityImageAnalysisBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
-//        viewBinding.passport.background =
-//            ContextCompat.getDrawable(this, R.drawable.passport_guideline_horizontal)
-//
-//        viewBinding.mrz.background =
-//            ContextCompat.getDrawable(this, R.drawable.passport_guideline_horizontal)
-
-
         //스크린 화면을 기준으로 16:9를 맞출 생각이다. 그래서 동적으로 넣어주기 위한 부분
         val displayMetrics = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(displayMetrics)
@@ -162,6 +155,12 @@ class ImageAnalysisActivity : AppCompatActivity() {
                     viewBinding.mrz.viewTreeObserver.removeOnGlobalLayoutListener(this)
                 }
             })
+
+    }
+
+    override fun onStart() {
+        super.onStart()
+        (application as MainApplication).stopNFCReader(this)
     }
 
     private fun startCamera() {
@@ -300,7 +299,6 @@ class ImageAnalysisActivity : AppCompatActivity() {
         Log.d("cropImageSecondImage", "viewBinding.frameLayout.x : " + viewBinding.frameLayout.x)
         Log.d("cropImageSecondImage", "viewBinding.frameLayout.y : " + viewBinding.frameLayout.y)
 
-
         val xInitialPos = (reference.x - viewBinding.frameLayout.x).toInt()
         val yInitialPos = (reference.y - viewBinding.frameLayout.y).toInt()
 
@@ -438,11 +436,12 @@ class ImageAnalysisActivity : AppCompatActivity() {
         val mrzInfo =
             buildTempMrz(mrzResult.docId, mrzResult.dateOfBirth, mrzResult.dateOfExpiration)
         if (isMrzValid(mrzInfo!!) && count < 1) {
+
+            // 용량이 너무 커서 intent로는 이미지를 못넘겨줌. 그래서 공용저장소 처럼 Application class에 넣어줌.
+            (application as MainApplication).setBitmap(mBitmap)
+
             val intent = Intent(this, NfcScanActivity::class.java)
             intent.putExtra(MRZ_RESULT, mrzInfo)
-            val application: MainApplication = applicationContext as MainApplication
-
-            application.mBitmap = mBitmap
             startActivity(intent)
             finish()
             count++

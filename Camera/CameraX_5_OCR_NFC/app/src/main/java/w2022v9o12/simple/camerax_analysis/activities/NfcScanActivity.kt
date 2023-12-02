@@ -8,7 +8,6 @@ import android.graphics.Bitmap
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
-import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -30,6 +29,7 @@ import org.jmrtd.lds.DisplayedImageInfo
 import org.jmrtd.lds.PACEInfo
 import org.jmrtd.lds.SecurityInfo
 import org.jmrtd.lds.icao.DG11File
+import org.jmrtd.lds.icao.DG12File
 import org.jmrtd.lds.icao.DG1File
 import org.jmrtd.lds.icao.DG2File
 import org.jmrtd.lds.icao.DG3File
@@ -42,13 +42,13 @@ import org.jmrtd.lds.iso19794.FingerImageInfo
 import w2022v9o12.simple.camerax_analysis.MainApplication
 import w2022v9o12.simple.camerax_analysis.R
 import w2022v9o12.simple.camerax_analysis.databinding.ActivityNfcScanBinding
+import w2022v9o12.simple.camerax_analysis.model.AdditionalDocumentDetails
 import w2022v9o12.simple.camerax_analysis.model.AdditionalPersonDetails
 import w2022v9o12.simple.camerax_analysis.model.DateUtil
 import w2022v9o12.simple.camerax_analysis.model.EDocument
 import w2022v9o12.simple.camerax_analysis.model.Image
 import w2022v9o12.simple.camerax_analysis.model.ImageUtil
 import w2022v9o12.simple.camerax_analysis.model.PersonDetails
-
 
 class NfcScanActivity : AppCompatActivity() {
 
@@ -66,9 +66,6 @@ class NfcScanActivity : AppCompatActivity() {
     private var birthDate = ""
 
     private lateinit var imageView: ImageView
-
-    private lateinit var application: MainApplication
-
 
     companion object {
         @SuppressLint("StaticFieldLeak")
@@ -94,7 +91,7 @@ class NfcScanActivity : AppCompatActivity() {
         imageView = findViewById(R.id.imageView)
         progressBar = findViewById(R.id.progressBar)
 
-        // CaptuerActivity로 부터 받은 데이터 추출
+        // ImageAnalysisActivity 부터 받은 데이터 추출
         val intent: Intent = intent
 
         if (intent.getSerializableExtra(MRZ_RESULT) != null) {
@@ -108,11 +105,8 @@ class NfcScanActivity : AppCompatActivity() {
         }
 
 
-        application = applicationContext as MainApplication
-        imageView.setImageBitmap(application.mBitmap)
-
-        adapter = NfcAdapter.getDefaultAdapter(this)
-
+        imageView.setImageBitmap((application as MainApplication).getBitmap())
+        adapter = (application as MainApplication).getNFCAdapter()
     }
 
     override fun onStart() {
@@ -180,10 +174,12 @@ class NfcScanActivity : AppCompatActivity() {
         private val bacKey: BACKeySpec,
         private val mContext: Context,
     ) : ThreadTask<Void?, Void?, Exception?>() {
-
         private var eDocument: EDocument = EDocument()
         private var personDetails: PersonDetails = PersonDetails()
         private var additionalPersonDetails: AdditionalPersonDetails = AdditionalPersonDetails()
+        private var additionalDocumentDetails: AdditionalDocumentDetails =
+            AdditionalDocumentDetails()
+
         private val dateUtil = DateUtil()
         private val imageUtil = ImageUtil()
 
@@ -220,6 +216,8 @@ class NfcScanActivity : AppCompatActivity() {
                         }
                     }
                 } catch (e: Exception) {
+                    Log.d("goodgood", "goodgood444")
+
                     Log.w("TAG", e)
                 }
                 service.sendSelectApplet(paceSucceeded)
@@ -234,8 +232,9 @@ class NfcScanActivity : AppCompatActivity() {
                 // -- Personal Details -- //
                 val dg1In: CardFileInputStream =
                     service.getInputStream(PassportService.EF_DG1)
-                val dg1File: DG1File = DG1File(dg1In)
+                val dg1File = DG1File(dg1In)
                 val mrzInfo: MRZInfo = dg1File.mrzInfo
+                personDetails.documentType = mrzInfo.documentType.toString()
                 personDetails.name =
                     mrzInfo.secondaryIdentifier.replace("<", " ").trim { it <= ' ' }
                 personDetails.surname =
@@ -249,11 +248,7 @@ class NfcScanActivity : AppCompatActivity() {
                 personDetails.nationality = mrzInfo.nationality
                 personDetails.issuerAuthority = mrzInfo.issuingState
 
-                Log.d(
-                    "MRZInfoMRZInfo",
-                    "name : " + mrzInfo.secondaryIdentifier.replace("<", " ")
-                        .trim { it <= ' ' })
-
+                Log.d("goodgood", personDetails.name!!)
 
                 // -- Face Image -- //
                 val dg2In: CardFileInputStream =
@@ -332,29 +327,45 @@ class NfcScanActivity : AppCompatActivity() {
                     val dg11In = service.getInputStream(PassportService.EF_DG11)
                     val dg11File = DG11File(dg11In)
                     if (dg11File.length > 0) {
-                        additionalPersonDetails.custodyInformation =
-                            dg11File.custodyInformation
+
                         additionalPersonDetails.nameOfHolder = dg11File.nameOfHolder
-                        additionalPersonDetails.fullDateOfBirth = dg11File.fullDateOfBirth
                         additionalPersonDetails.otherNames = dg11File.otherNames
-                        additionalPersonDetails.otherValidTDNumbers =
-                            dg11File.otherValidTDNumbers
-                        additionalPersonDetails.permanentAddress = dg11File.permanentAddress
                         additionalPersonDetails.personalNumber = dg11File.personalNumber
-                        additionalPersonDetails.personalSummary = dg11File.personalSummary
                         additionalPersonDetails.placeOfBirth = dg11File.placeOfBirth
+                        additionalPersonDetails.permanentAddress = dg11File.permanentAddress
+                        additionalPersonDetails.telephone = dg11File.telephone
                         additionalPersonDetails.profession = dg11File.profession
+                        additionalPersonDetails.title = dg11File.title
+                        additionalPersonDetails.personalSummary = dg11File.personalSummary
                         additionalPersonDetails.proofOfCitizenship =
                             dg11File.proofOfCitizenship
-                        additionalPersonDetails.tag = dg11File.tag
-                        additionalPersonDetails.tagPresenceList = dg11File.tagPresenceList
-                        additionalPersonDetails.telephone = dg11File.telephone
-                        additionalPersonDetails.title = dg11File.title
+                        additionalPersonDetails.otherValidTDNumbers =
+                            dg11File.otherValidTDNumbers
+                        additionalPersonDetails.custodyInformation =
+                            dg11File.custodyInformation
                     }
                 } catch (e: java.lang.Exception) {
                     Log.w("TAG", e)
                 }
 
+                try {
+                    val dg12In = service.getInputStream(PassportService.EF_DG12)
+                    val dg12File = DG12File(dg12In)
+
+                    additionalDocumentDetails.issuingAuthority = dg12File.issuingAuthority
+                    additionalDocumentDetails.dateOfIssue = dg12File.dateOfIssue
+                    additionalDocumentDetails.namesOfOtherPersons = dg12File.namesOfOtherPersons
+                    additionalDocumentDetails.endorsementsAndObservations =
+                        dg12File.endorsementsAndObservations
+                    additionalDocumentDetails.taxOrExitRequirements = dg12File.taxOrExitRequirements
+                    additionalDocumentDetails.imageOfFront = dg12File.imageOfFront
+                    additionalDocumentDetails.imageOfRear = dg12File.imageOfRear
+
+                } catch (e: java.lang.Exception) {
+
+                }
+
+                eDocument.setAdditionalDocumentDetails(additionalDocumentDetails)
                 eDocument.setPersonDetails(personDetails)
                 eDocument.setAdditionalPersonDetails(additionalPersonDetails)
             } catch (e: java.lang.Exception) {
@@ -424,8 +435,7 @@ class NfcScanActivity : AppCompatActivity() {
     }
 
 
-    //-----------------------------------
-
+// ----- AsyncTask 대체 -------
 //    class ReadTask constructor(
 //        private val isoDep: IsoDep,
 //        private val bacKey: BACKeySpec,

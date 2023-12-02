@@ -1,13 +1,12 @@
 package w2022v9o12.simple.camerax_analysis.model
 
 import java.io.Serializable
-import java.security.PublicKey
 
 class EDocument : Serializable {
 
     private var personDetails: PersonDetails? = null
     private var additionalPersonDetails: AdditionalPersonDetails? = null
-    private val docPublicKey: PublicKey? = null
+    private var additionalDocumentDetails: AdditionalDocumentDetails? = null
 
     fun getPersonDetails(): PersonDetails? {
         return personDetails
@@ -17,7 +16,7 @@ class EDocument : Serializable {
         this.personDetails = personDetails
     }
 
-    fun getAdditionalPersonDetails(): AdditionalPersonDetails? {
+    fun getAdditionalPersonDetail(): AdditionalPersonDetails? {
         return additionalPersonDetails
     }
 
@@ -25,4 +24,11 @@ class EDocument : Serializable {
         this.additionalPersonDetails = additionalPersonDetails
     }
 
+    fun getAdditionalDocumentDetail(): AdditionalDocumentDetails? {
+        return additionalDocumentDetails
+    }
+
+    fun setAdditionalDocumentDetails(additionalDocumentDetails: AdditionalDocumentDetails?) {
+        this.additionalDocumentDetails = additionalDocumentDetails
+    }
 }
