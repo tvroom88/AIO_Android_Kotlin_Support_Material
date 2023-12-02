@@ -23,6 +23,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        (application as MainApplication).stopNFCReader(this)
+        (application as MainApplication).enableStopNFCReader(this)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        (application as MainApplication).disableStopNFCReader(this)
     }
 }

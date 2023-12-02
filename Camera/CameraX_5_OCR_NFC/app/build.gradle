@@ -62,7 +62,7 @@ dependencies {
 
     implementation 'org.jmrtd:jmrtd:0.7.18'
     implementation 'net.sf.scuba:scuba-sc-android:0.0.18'
-    implementation 'com.madgag.spongycastle:prov:1.58.0.0' //Secruity때문에
+    implementation 'com.madgag.spongycastle:prov:1.58.0.0'
     implementation 'edu.ucar:jj2000:5.2'
     implementation 'com.github.mhshams:jnbis:1.1.0'
 

@@ -38,7 +38,6 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import net.sf.scuba.data.Gender
 import org.jmrtd.lds.icao.MRZInfo
 import w2022v9o12.simple.camerax_analysis.MainApplication
-import w2022v9o12.simple.camerax_analysis.R
 import w2022v9o12.simple.camerax_analysis.databinding.ActivityImageAnalysisBinding
 import w2022v9o12.simple.camerax_analysis.model.MRZResult
 import java.io.ByteArrayOutputStream
@@ -160,7 +159,12 @@ class ImageAnalysisActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        (application as MainApplication).stopNFCReader(this)
+        (application as MainApplication).enableStopNFCReader(this)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        (application as MainApplication).disableStopNFCReader(this)
     }
 
     private fun startCamera() {

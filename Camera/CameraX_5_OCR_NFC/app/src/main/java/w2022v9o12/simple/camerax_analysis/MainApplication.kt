@@ -27,9 +27,13 @@ class MainApplication : Application() {
         return adapter
     }
 
-    //NFC 진동이 작동되는거 자체를 막음
-    fun stopNFCReader(mActivity: Activity) {
+    fun enableStopNFCReader(mActivity: Activity) {
         if (adapter != null)
-            adapter.enableReaderMode(mActivity, null, NfcAdapter.STATE_TURNING_OFF, null);
+            adapter.enableReaderMode(mActivity, null, NfcAdapter.STATE_TURNING_OFF, null)
+    }
+
+    fun disableStopNFCReader(mActivity: Activity) {
+        if (adapter != null)
+            adapter.disableReaderMode(mActivity)
     }
 }

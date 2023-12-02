@@ -2,18 +2,9 @@ package w2022v9o12.simple.camerax_analysis.activities
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
-import android.nfc.NdefMessage
-import android.nfc.NdefRecord
-import android.nfc.NfcAdapter
-import android.nfc.Tag
 import android.os.Bundle
-import android.util.Log
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import w2022v9o12.simple.camerax_analysis.MainApplication
-import w2022v9o12.simple.camerax_analysis.R
-import w2022v9o12.simple.camerax_analysis.databinding.ActivityNfcScanBinding
 import w2022v9o12.simple.camerax_analysis.databinding.ActivityResultBinding
 import w2022v9o12.simple.camerax_analysis.model.EDocument
 import w2022v9o12.simple.camerax_analysis.model.ImageUtil
@@ -22,11 +13,8 @@ class ResultActivity : AppCompatActivity() {
 
     private lateinit var viewBinding: ActivityResultBinding
 
-
     private var eDocument: EDocument? = null
     private lateinit var imageUtil: ImageUtil
-
-    private lateinit var adapter: NfcAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,24 +23,19 @@ class ResultActivity : AppCompatActivity() {
 
         val intent = intent
         eDocument = intent.getSerializableExtra("EDOCUMENT") as EDocument?
-
         imageUtil = ImageUtil()
-        adapter = NfcAdapter.getDefaultAdapter(this)
         setResultToView(eDocument)
-
     }
 
     override fun onStart() {
         super.onStart()
-        (application as MainApplication).stopNFCReader(this)
+        (application as MainApplication).enableStopNFCReader(this)
     }
 
 
     override fun onPause() {
         super.onPause()
-        Log.d("123123123", "NfcScanActivity - onPause")
-        if (adapter != null)
-            adapter.disableReaderMode(this);
+        (application as MainApplication).disableStopNFCReader(this)
     }
 
     @SuppressLint("SetTextI18n")
@@ -107,5 +90,4 @@ class ResultActivity : AppCompatActivity() {
 
         viewBinding.textResult4.text = result
     }
-
 }

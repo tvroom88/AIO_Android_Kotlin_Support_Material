@@ -104,7 +104,6 @@ class NfcScanActivity : AppCompatActivity() {
             viewBinding.birthDateEditText.setText(birthDate)
         }
 
-
         imageView.setImageBitmap((application as MainApplication).getBitmap())
         adapter = (application as MainApplication).getNFCAdapter()
     }
@@ -127,10 +126,7 @@ class NfcScanActivity : AppCompatActivity() {
             startActivity(intent)
         } else {
             // NFC가 켜져있음
-            val intent = Intent(applicationContext, this.javaClass)
-            intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-            val pendingIntent: PendingIntent =
-                PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_MUTABLE)
+            val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_MUTABLE)
             val filter: Array<Array<String>> = arrayOf(arrayOf("android.nfc.tech.IsoDep"))
             adapter.enableForegroundDispatch(this, pendingIntent, null, filter)
         }
@@ -140,7 +136,6 @@ class NfcScanActivity : AppCompatActivity() {
         super.onPause()
         if (adapter != null)
             adapter.disableForegroundDispatch(this)
-
     }
 
 
@@ -167,7 +162,6 @@ class NfcScanActivity : AppCompatActivity() {
             Log.d("onNewIntent", "onPostExecute333")
         }
     }
-
 
     class ReadTask constructor(
         private val isoDep: IsoDep,
@@ -416,7 +410,6 @@ class NfcScanActivity : AppCompatActivity() {
         private var mResultHandler: Handler = object : Handler(Looper.getMainLooper()) {
             override fun handleMessage(msg: Message) {
                 super.handleMessage(msg)
-
 
                 // Call onPostExecute
                 onPostExecute(mResult)
