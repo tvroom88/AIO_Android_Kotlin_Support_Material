@@ -2,31 +2,34 @@ package com.example.androidwebsocket
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var client: OkHttpClient
-
+    private lateinit var webSocketHelper: WebSocketHelper
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val editText = findViewById<EditText>(R.id.editText)
+        val button = findViewById<Button>(R.id.button)
 
-        client = OkHttpClient()
+        webSocketHelper = WebSocketHelper()
+        webSocketHelper.initWebSocket()
 
-        val request: Request = Request.Builder()
-            .url(url)
-            .build()
-        val listener = WebSocketHelper()
-
-        client.newWebSocket(request, listener)
-        client.dispatcher.executorService.shutdown()
+        button.setOnClickListener {
+            var editStr: String = if (editText.text.toString() == "") "null" else editText.text.toString()
+            val str = webSocketHelper.convertStrToJsonStr("{message:$editStr}")
+            webSocketHelper.sendMessageToServer(str)
+        }
     }
 
-
-    companion object {
-        private const val url = "ws://192.168.200.17:3000"
+    override fun onDestroy() {
+        super.onDestroy()
+        webSocketHelper.closeWebSocket()
     }
 }
