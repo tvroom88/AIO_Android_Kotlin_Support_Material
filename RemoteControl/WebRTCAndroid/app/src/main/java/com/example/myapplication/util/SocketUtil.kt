@@ -15,11 +15,9 @@ class SocketUtil(private val msgInterface: NewMsgInterface) {
     private val gson = Gson()
 
     // (1) 만약 안드로이드 에뮬레이터를 사용할 것이라면 "ws://10.0.2.2:3000"
-//    private val url = URI("ws://10.0.2.2:3000")
+    // (2) 개인 스마트폰으로 진행한다면 터미널에서 'ipconfig' 을 쳐서 개인의 ethernet ipv4을 찾기 , 제꺼는 오른쪽과 같습니다.: "ws://192.168.200.17:3000"
 
-    // (2) 개인 스마트폰으로 진행한다면 터미널에서 'ipconfig' 을 쳐서 개인의 ethernet ipv4을 찾기 , 제꺼는 오른쪽과 같습니다.: "ws://192.168.200.17"
-    //172.25.128.1
-//    private val url = URI("ws://192.168.200.17")
+
     private val url = URI("ws://192.168.153.165")
 
     companion object {
