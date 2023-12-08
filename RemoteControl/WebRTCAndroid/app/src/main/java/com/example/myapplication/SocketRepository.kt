@@ -1,4 +1,4 @@
-package com.example.myapplication.util
+package com.example.myapplication
 
 import android.util.Log
 import com.example.myapplication.interfaces.NewMsgInterface
@@ -9,7 +9,7 @@ import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.net.URI
 
-class SocketUtil(private val msgInterface: NewMsgInterface) {
+class SocketRepository(private val msgInterface: NewMsgInterface) {
 
     private lateinit var webSocket: WebSocketClient
     private val gson = Gson()
@@ -58,5 +58,14 @@ class SocketUtil(private val msgInterface: NewMsgInterface) {
 
         }
         webSocket.connect()
+    }
+
+    fun sendMessageToSocket(message: DataModel) {
+        try {
+            Log.d(TAG, "sendMessageToSocket: $message")
+            webSocket?.send(Gson().toJson(message))
+        } catch (e: Exception) {
+            Log.d(TAG, "sendMessageToSocket: $e")
+        }
     }
 }

@@ -49,8 +49,16 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
-
+    // WebSocket 라이브러리
     implementation ("org.java-websocket:Java-WebSocket:1.5.3")
+    
+    // Gson 라이브러리
     implementation ("com.google.code.gson:gson:2.9.1")
+
+    // WebRTC 라이브러리
+//    implementation ("org.webrtc:google-webrtc:1.0.+")
+//    implementation(fileTree("libs/autobanh.jar"))
+
+    implementation ("com.mesibo.api:webrtc:1.0.5")
 
 }
