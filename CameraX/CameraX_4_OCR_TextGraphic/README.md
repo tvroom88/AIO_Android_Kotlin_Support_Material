@@ -1,8 +1,8 @@
 # CameraX_4_OCR_TextGraphic
 
-#### Android CameraX API와 구글의 MLKIT을 이용해서 OCR을 구현하였습니다. 
+#### Android CameraX API와 구글의 MLKIT을 이용해서 OCR을 구현하고 거기에 OCR로 읽어진 Text를 화면에 보여주는 부분을 구현했습니다.
 
-#### 설명 : https://from-android-to-server.tistory.com/80
+#### 설명 : https://from-android-to-server.tistory.com/82
 
 #### 실행 화면 스크린샷 :
 
