@@ -10,4 +10,4 @@ Camera는 CameraX api를 사용하였습니다.
 
 스크린샷 :
 
-![다운로드](https://github.com/tvroom88/AIO_Android_Kotlin_Support_Material/assets/4710854/be4fbb65-6042-4e02-a04b-95e971099ac7) ![다운로드 (1)](https://github.com/tvroom88/AIO_Android_Kotlin_Support_Material/assets/4710854/2032855f-77c1-432b-aa8d-047e5d82e03b)
+![다운로드](https://github.com/tvroom88/AIO_Android_Kotlin_Support_Material/assets/4710854/0f16901b-eabf-4c3f-8277-1efd28718b20) ![다운로드 (1)](https://github.com/tvroom88/AIO_Android_Kotlin_Support_Material/assets/4710854/9d10dcfc-7e5d-404a-85e0-24ba25a7510a)
