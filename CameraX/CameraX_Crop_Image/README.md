@@ -8,6 +8,6 @@ Camera는 CameraX api를 사용하였습니다.
 
 설명 url : https://from-android-to-server.tistory.com/77
 
-앱 이미지 :
+스크린샷 :
 
-![Uploading Screenshot_20231130_171323_Cutting_Image_With_CameraX.jpg…]()
+![다운로드](https://github.com/tvroom88/AIO_Android_Kotlin_Support_Material/assets/4710854/be4fbb65-6042-4e02-a04b-95e971099ac7) ![다운로드 (1)](https://github.com/tvroom88/AIO_Android_Kotlin_Support_Material/assets/4710854/2032855f-77c1-432b-aa8d-047e5d82e03b)
