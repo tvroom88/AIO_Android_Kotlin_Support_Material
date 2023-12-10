@@ -1,8 +1,8 @@
-# CameraX_1_Basic(Kotlin)
+# CameraX_2_takePicture
 
-#### codelab 코드를 따라서 만든 소스입니다.
+#### codelab 코드는 이미지를 바로 저장하는 것해서 
 
-#### codelab에서는 코틀린으로 되어있으나 여기서는 자바로 만들었습니다.
+#### 이미지를 바로 저장하지 않고 이미지를 가져오는 것만 바꾼 코드입니다.
 
-#### 설명 : https://from-android-to-server.tistory.com/84
+#### 설명 : https://from-android-to-server.tistory.com/75
 
