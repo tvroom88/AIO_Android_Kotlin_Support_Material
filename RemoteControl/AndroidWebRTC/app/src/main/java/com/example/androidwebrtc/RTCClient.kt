@@ -91,7 +91,11 @@ class RTCClient(
 
         peerConnection?.addStream(localStream)
 
+
+
     }
+
+
 
     private fun getVideoCapturer(application: Application): CameraVideoCapturer {
         return Camera2Enumerator(application).run {
@@ -232,4 +236,8 @@ class RTCClient(
     fun endCall() {
         peerConnection?.close()
     }
+
+//    fun stopCapture(){
+//        videoCapturer?.stopCapture()
+//    }
 }

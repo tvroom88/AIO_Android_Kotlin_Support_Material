@@ -1,14 +1,15 @@
 package com.example.androidwebrtc
 
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.example.androidwebrtc.databinding.ActivityCallBinding
 import com.example.androidwebrtc.models.IceCandidateModel
 import com.example.androidwebrtc.models.MessageModel
-import com.example.androidwebrtc.utils.NewMessageInterface
+import com.example.androidwebrtc.utils.MessageInterface
 import com.example.androidwebrtc.utils.PeerConnectionObserver
 import com.example.androidwebrtc.utils.RTCAudioManager
 import com.google.gson.Gson
@@ -16,14 +17,14 @@ import org.webrtc.IceCandidate
 import org.webrtc.MediaStream
 import org.webrtc.SessionDescription
 
-class CallActivity : AppCompatActivity(), NewMessageInterface {
 
+class CallActivity : AppCompatActivity(), MessageInterface {
 
     lateinit var binding: ActivityCallBinding
     private var userName: String? = null
     private var socketRepository: SocketRepository? = null
     private var rtcClient: RTCClient? = null
-    private val TAG = "CallActivity"
+    private val TAG = "WebRTC - CallActivity"
     private var target: String = ""
     private val gson = Gson()
     private var isMute = false
@@ -37,14 +38,12 @@ class CallActivity : AppCompatActivity(), NewMessageInterface {
         binding = ActivityCallBinding.inflate(layoutInflater)
         setContentView(binding.root)
         init()
-
-
     }
 
     private fun init() {
         userName = intent.getStringExtra("username")
         userName?.let {
-            socketRepository = SocketRepository(this, it)
+            socketRepository = SocketRepository(this, it, this, this)
         }
         socketRepository?.initSocket()
 
@@ -72,7 +71,6 @@ class CallActivity : AppCompatActivity(), NewMessageInterface {
                     super.onAddStream(p0)
                     p0?.videoTracks?.get(0)?.addSink(binding.remoteView)
                     Log.d(TAG, "onAddStream: $p0")
-
                 }
             })
         rtcAudioManager.setDefaultAudioDevice(RTCAudioManager.AudioDevice.SPEAKER_PHONE)
@@ -140,12 +138,32 @@ class CallActivity : AppCompatActivity(), NewMessageInterface {
     override fun onNewMessage(message: MessageModel) {
         Log.d(TAG, "onNewMessage: $message")
         when (message.type) {
+
+            "store_user_response" -> {
+                if (message.msg == "success") {
+                    runOnUiThread {
+                        Toast.makeText(this, "store user successfully", Toast.LENGTH_LONG).show()
+                    }
+
+                    Log.d(TAG, "store_user_response")
+
+                } else {
+                    val intent = Intent()
+                    intent.putExtra(
+                        "message",
+                        "user name is already exist"
+                    ) // "key"는 데이터를 식별하는 데 사용될 키입니다.
+                    setResult(RESULT_OK, intent)
+                    finish()
+                }
+            }
+
+
             "call_response" -> {
                 if (message.data == "user is not online") {
                     //user is not reachable
                     runOnUiThread {
                         Toast.makeText(this, "user is not reachable", Toast.LENGTH_LONG).show()
-
                     }
                 } else {
                     //we are ready for call, we started a call
@@ -159,6 +177,7 @@ class CallActivity : AppCompatActivity(), NewMessageInterface {
                             rtcClient?.call(targetUserNameEt.text.toString())
                         }
 
+                        Log.d(TAG, "call_response")
 
                     }
 
@@ -175,6 +194,8 @@ class CallActivity : AppCompatActivity(), NewMessageInterface {
                 runOnUiThread {
                     binding.remoteViewLoading.visibility = View.GONE
                 }
+
+                Log.d(TAG, "answer_received")
             }
 
             "offer_received" -> {
@@ -205,6 +226,8 @@ class CallActivity : AppCompatActivity(), NewMessageInterface {
                         setIncomingCallLayoutGone()
                     }
 
+
+                    Log.d(TAG, "offer_received")
                 }
 
             }
@@ -223,6 +246,9 @@ class CallActivity : AppCompatActivity(), NewMessageInterface {
                             receivingCandidate.sdpCandidate
                         )
                     )
+
+                    Log.d(TAG, "ice_candidate")
+
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
