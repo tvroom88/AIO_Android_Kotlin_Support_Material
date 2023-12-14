@@ -28,8 +28,8 @@ class SocketRepository(
 
     private var webSocket: WebSocketClient? = null
     private val gson = Gson()
-    private val uri = URI("ws://192.168.200.17:3000")
-
+//    private val uri = URI("ws://192.168.200.17:3000")
+    private val uri = URI("ws://192.168.50.177:3000")
     fun initSocket() {
 
         webSocket = object : WebSocketClient(uri) {

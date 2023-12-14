@@ -53,12 +53,14 @@ class MainActivity : AppCompatActivity() {
 
         mContext = this
         mActivity = this
+        captureMode = CaptureMode.VIDEO_CAPTURE
 
         binding.apply {
             enterBtn.setOnClickListener {
                 if (checkPermission()) {
                     val intent = Intent(mContext, CallActivity::class.java)
                     intent.putExtra("username", binding.username.text.toString())
+                    intent.putExtra("captureMode", captureMode)
                     launcher.launch(intent)
                 } else {
                     ActivityCompat.requestPermissions(
@@ -132,6 +134,7 @@ class MainActivity : AppCompatActivity() {
                 if (permissionCheck) {
                     val intent = Intent(this, CallActivity::class.java)
                     intent.putExtra("username", binding.username.text.toString())
+                    intent.putExtra("capture_mode", captureMode)
                     launcher.launch(intent)
                 } else {
                     Toast.makeText(this, "permission are not granted", Toast.LENGTH_SHORT).show()

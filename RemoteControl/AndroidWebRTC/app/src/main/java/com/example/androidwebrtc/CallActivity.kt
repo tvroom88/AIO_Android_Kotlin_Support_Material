@@ -1,14 +1,19 @@
 package com.example.androidwebrtc
 
 import android.content.Intent
+import android.media.projection.MediaProjectionManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.androidwebrtc.databinding.ActivityCallBinding
 import com.example.androidwebrtc.models.IceCandidateModel
 import com.example.androidwebrtc.models.MessageModel
+import com.example.androidwebrtc.utils.CaptureMode
 import com.example.androidwebrtc.utils.MessageInterface
 import com.example.androidwebrtc.utils.PeerConnectionObserver
 import com.example.androidwebrtc.utils.RTCAudioManager
@@ -16,12 +21,15 @@ import com.google.gson.Gson
 import org.webrtc.IceCandidate
 import org.webrtc.MediaStream
 import org.webrtc.SessionDescription
+import java.io.Serializable
 
 
 class CallActivity : AppCompatActivity(), MessageInterface {
 
     lateinit var binding: ActivityCallBinding
     private var userName: String? = null
+    private var captureMode: CaptureMode? = null
+
     private var socketRepository: SocketRepository? = null
     private var rtcClient: RTCClient? = null
     private val TAG = "WebRTC - CallActivity"
@@ -32,21 +40,86 @@ class CallActivity : AppCompatActivity(), MessageInterface {
     private val rtcAudioManager by lazy { RTCAudioManager.create(this) }
     private var isSpeakerMode = true
 
+    // ScreenSharing일 경우
+    private var mediaProjectionManager: MediaProjectionManager? = null
+
+    val PERMISSION_CODE = 1234
+    private lateinit var launcher: ActivityResultLauncher<Intent>
+    private var mediaProjectionPermissionResultData: Intent? = null
+
+    private lateinit var foregroundServiceIntent: Intent
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCallBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        init()
-    }
 
-    private fun init() {
-        userName = intent.getStringExtra("username")
+        userName = intent.getStringExtra("username") // 유저 이름
+        captureMode = intent.intentSerializable(
+            "captureMode",
+            CaptureMode::class.java
+        ) // 비디오를 보여줄지 스크린을 보여줄지 결정
+
+        Log.d(TAG, "userName : $userName")
+        Log.d(TAG, "captureMode : $captureMode")
+
+
         userName?.let {
             socketRepository = SocketRepository(this, it, this, this)
         }
         socketRepository?.initSocket()
 
+        rtcAudioManager.setDefaultAudioDevice(RTCAudioManager.AudioDevice.SPEAKER_PHONE)
+
+        initRTCCLient()
+        initButtons()
+
+
+//        init();
+        foregroundServiceIntent = Intent(this, WebRTCForegroundService::class.java)
+
+
+        launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            if (it.resultCode == RESULT_OK) {
+                mediaProjectionPermissionResultData = it.data
+                rtcClient?.startScreenShare(
+                    mediaProjectionPermissionResultData!!,
+                    this,
+                    binding.localView
+                )
+                rtcClient?.call(binding.targetUserNameEt.text.toString())
+                binding.button.visibility = View.VISIBLE
+            }
+        }
+
+
+    }
+
+
+//    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+//        super.onActivityResult(requestCode, resultCode, data)
+//        if (requestCode == PERMISSION_CODE) {
+//            if (resultCode == RESULT_OK) {
+//                // MediaProjection 객체 생성
+////                MediaProjection mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data);
+//                mediaProjectionPermissionResultData = data
+//                rtcClient!!.startLocalVideo(
+//                    mediaProjectionPermissionResultData,
+//                    this
+//                )
+//                rtcClient!!.call(targetUserNameEt.text.toString())
+//            }
+//        }
+//    }
+
+    override fun onStop() {
+        super.onStop()
+        releaseSurfaceView()
+        rtcClient?.endCall()
+    }
+
+
+    private fun initRTCCLient() {
         rtcClient = RTCClient(
             application,
             userName!!,
@@ -73,9 +146,9 @@ class CallActivity : AppCompatActivity(), MessageInterface {
                     Log.d(TAG, "onAddStream: $p0")
                 }
             })
-        rtcAudioManager.setDefaultAudioDevice(RTCAudioManager.AudioDevice.SPEAKER_PHONE)
+    }
 
-
+    private fun initButtons() {
         binding.apply {
             callBtn.setOnClickListener {
                 socketRepository?.sendMessageToSocket(
@@ -129,11 +202,26 @@ class CallActivity : AppCompatActivity(), MessageInterface {
                 setCallLayoutGone()
                 setWhoToCallLayoutVisible()
                 setIncomingCallLayoutGone()
-                rtcClient?.endCall()
+//                rtcClient?.endCall()
+
+                releaseSurfaceView()
             }
         }
 
     }
+
+    private fun startService() {
+        Thread {
+            foregroundServiceIntent = Intent(this, WebRTCForegroundService::class.java)
+            foregroundServiceIntent.action = "START_SERVICE"
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(foregroundServiceIntent)
+            } else {
+                startService(foregroundServiceIntent)
+            }
+        }.start()
+    }
+
 
     override fun onNewMessage(message: MessageModel) {
         Log.d(TAG, "onNewMessage: $message")
@@ -152,7 +240,7 @@ class CallActivity : AppCompatActivity(), MessageInterface {
                     intent.putExtra(
                         "message",
                         "user name is already exist"
-                    ) // "key"는 데이터를 식별하는 데 사용될 키입니다.
+                    )
                     setResult(RESULT_OK, intent)
                     finish()
                 }
@@ -170,11 +258,25 @@ class CallActivity : AppCompatActivity(), MessageInterface {
                     runOnUiThread {
                         setWhoToCallLayoutGone()
                         setCallLayoutVisible()
-                        binding.apply {
-                            rtcClient?.initializeSurfaceView(localView)
-                            rtcClient?.initializeSurfaceView(remoteView)
-                            rtcClient?.startLocalVideo(localView)
-                            rtcClient?.call(targetUserNameEt.text.toString())
+
+                        if (captureMode == CaptureMode.VIDEO_CAPTURE) {
+                            binding.apply {
+                                rtcClient?.initializeSurfaceView(localView)
+                                rtcClient?.initializeSurfaceView(remoteView)
+                                rtcClient?.startLocalVideo(localView)
+                                rtcClient?.call(targetUserNameEt.text.toString())
+                            }
+                        } else {
+
+                            //추가된 부분
+                            rtcClient?.initializeSurfaceView(binding.localView)
+                            rtcClient?.call(binding.targetUserNameEt.text.toString())
+
+                            startService()
+                            mediaProjectionManager =
+                                getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+                            launcher.launch(mediaProjectionManager!!.createScreenCaptureIntent())
+
                         }
 
                         Log.d(TAG, "call_response")
@@ -184,6 +286,7 @@ class CallActivity : AppCompatActivity(), MessageInterface {
                 }
             }
 
+            //전화를 건 사람
             "answer_received" -> {
 
                 val session = SessionDescription(
@@ -198,6 +301,7 @@ class CallActivity : AppCompatActivity(), MessageInterface {
                 Log.d(TAG, "answer_received")
             }
 
+            //전화를 받은 사람
             "offer_received" -> {
                 runOnUiThread {
                     setIncomingCallLayoutVisible()
@@ -210,7 +314,7 @@ class CallActivity : AppCompatActivity(), MessageInterface {
                         binding.apply {
                             rtcClient?.initializeSurfaceView(localView)
                             rtcClient?.initializeSurfaceView(remoteView)
-                            rtcClient?.startLocalVideo(localView)
+//                            rtcClient?.startLocalVideo(localView)
                         }
                         val session = SessionDescription(
                             SessionDescription.Type.OFFER,
@@ -279,4 +383,23 @@ class CallActivity : AppCompatActivity(), MessageInterface {
     private fun setWhoToCallLayoutVisible() {
         binding.whoToCallLayout.visibility = View.VISIBLE
     }
+
+    //ENUM을 받을때 바뀐 부분
+    private fun <T : Serializable> Intent.intentSerializable(key: String, clazz: Class<T>): T? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            this.getSerializableExtra(key, clazz)
+        } else {
+            this.getSerializableExtra(key) as T?
+        }
+    }
+
+    private fun releaseSurfaceView() {
+        binding.apply {
+            rtcClient?.releaseSurfaceView(localView)
+            rtcClient?.releaseSurfaceView(remoteView)
+            rtcClient?.stopLocalVideo()
+        }
+    }
+
+
 }
