@@ -4,8 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
-import com.codewithkael.webrtcscreenshare.utils.DataModel
-import com.codewithkael.webrtcscreenshare.utils.DataModelType
 import javax.inject.Inject
 
 class WebrtcServiceRepository @Inject constructor(
@@ -103,28 +101,11 @@ class WebrtcServiceRepository @Inject constructor(
 
     // status that caller accept or reject permission of remote control
     fun sendAccessibilityServiceStatusToServer(status: Boolean, target: String) {
-
         val thread = Thread {
             val startIntent = Intent(context, WebrtcService::class.java)
             startIntent.action = "accessibilityServiceStatusIntent"
             startIntent.putExtra("status", status)
             startIntent.putExtra("target", target)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(startIntent)
-            } else {
-                context.startService(startIntent)
-            }
-        }
-        thread.start()
-    }
-
-
-    //For Test
-    fun sendDataChannelMessage() {
-        Log.d("abcabc", "WebrtcServiceRepository - sendDataChannelMessage")
-        val thread = Thread {
-            val startIntent = Intent(context, WebrtcService::class.java)
-            startIntent.action = "dataChannelMessage"
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(startIntent)
             } else {
@@ -148,9 +129,4 @@ class WebrtcServiceRepository @Inject constructor(
         }
         thread.start()
     }
-
-
-    // AA(caller) BB(Callee)
-    // BB -> ask remote permission to AA
-    // AA -> Yes, -> BB
 }

@@ -9,16 +9,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Path
 import android.util.Log
-import android.view.WindowManager
-import android.widget.FrameLayout
 
-class WebrtcBroadcastReceiver(private val service: AccessibilityService) :
-    BroadcastReceiver() {
-    var wm: WindowManager? = null
-    var mLayout: FrameLayout? = null
-    var params: WindowManager.LayoutParams? = null
-    var laserIsShowing = false
-
+class WebrtcBroadcastReceiver(private val service: AccessibilityService) : BroadcastReceiver() {
 
     companion object {
         private val TAG = WebrtcBroadcastReceiver::class.java.simpleName
@@ -26,17 +18,10 @@ class WebrtcBroadcastReceiver(private val service: AccessibilityService) :
 
     override fun onReceive(p0: Context?, intent: Intent?) {
 
-        Log.d("WebrtcBroadcastReceiver", "Broadcast Receiver is start")
-
-
         if (intent != null) {
             if (intent.action == "startBroadcastReceiver") {
                 Log.d("WebrtcBroadcastReceiver", "Broadcast Receiver is start")
                 WebrtcAccessibilityService.isBroadCastReceiverRegistered = true
-            }
-
-            if (intent.action == "hi") {
-                Log.d("WebrtcBroadcastReceiver", "Broadcast Receiver is hi")
             }
 
             if (intent.action == "sendXandYCoordination") {
@@ -73,8 +58,5 @@ class WebrtcBroadcastReceiver(private val service: AccessibilityService) :
                 Log.d("abcabc", "Gesture cancelled")
             }
         }, null)
-
-
     }
-
 }

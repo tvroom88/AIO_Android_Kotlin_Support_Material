@@ -11,8 +11,6 @@ import com.codewithkael.webrtcscreenshare.utils.DataModelType
 import com.google.gson.Gson
 import org.webrtc.*
 import org.webrtc.PeerConnection.Observer
-import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
 class WebrtcClient @Inject constructor(

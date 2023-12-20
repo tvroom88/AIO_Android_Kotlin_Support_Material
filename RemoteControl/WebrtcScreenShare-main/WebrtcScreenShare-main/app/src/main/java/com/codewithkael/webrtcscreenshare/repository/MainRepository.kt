@@ -11,9 +11,7 @@ import com.google.gson.Gson
 import org.json.JSONObject
 import org.webrtc.*
 import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets
 import javax.inject.Inject
-
 
 class MainRepository @Inject constructor(
     private val socketClient: SocketClient,
@@ -203,12 +201,9 @@ class MainRepository @Inject constructor(
                     e.printStackTrace()
                     null
                 }
-
-//                this.target = model.username
                 listener?.openRequestRemoteControlPermissionView(target) //Caller
-
-
             }
+
 
             AccessibilityAccept -> {
                 listener?.statusRemoteControlPermission(true)

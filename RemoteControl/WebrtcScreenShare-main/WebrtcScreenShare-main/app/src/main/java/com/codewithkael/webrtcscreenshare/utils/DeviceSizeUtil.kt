@@ -13,8 +13,7 @@ class DeviceSizeUtil {
 
     fun getDeviceHeight(context: Context): Int {
         val metrics: DisplayMetrics = context.resources.displayMetrics
-        val screenHeight = metrics.heightPixels
-        return screenHeight
+        return metrics.heightPixels
     }
 
     private fun getStatusBarHeight(context: Context): Int {
