@@ -2,10 +2,10 @@ package com.codewithkael.webrtcscreenshare.service
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.provider.Settings
@@ -13,27 +13,34 @@ import android.text.TextUtils.SimpleStringSplitter
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.widget.Toast
-import com.codewithkael.webrtcscreenshare.repository.MainRepository
+import androidx.core.content.ContextCompat
 import com.codewithkael.webrtcscreenshare.ui.CustomDialog
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
-@AndroidEntryPoint
-class WebrtcAccessibilityService @Inject constructor() : AccessibilityService() {
+class WebrtcAccessibilityService : AccessibilityService() {
 
     private var intentFilter = IntentFilter()
     private var myBroadcastReceiver: WebrtcBroadcastReceiver? = null
-
-
-//    @Inject
-//    lateinit var mainRepository: MainRepository
 
     override fun onCreate() {
         super.onCreate()
 
         myBroadcastReceiver = WebrtcBroadcastReceiver(this)
         intentFilter.addAction("startBroadcastReceiver")
-        registerReceiver(myBroadcastReceiver, intentFilter)
+        intentFilter.addAction("sendXandYCoordination")
+        ContextCompat.registerReceiver(
+            this,
+            myBroadcastReceiver,
+            intentFilter,
+            ContextCompat.RECEIVER_EXPORTED
+        )
+
+
+        val intent = Intent("startBroadcastReceiver")
+        this.sendBroadcast(intent)
+
+
+        Log.d("WebrtcAccessibilityService", "onCreate : ")
+
     }
 
     override fun onServiceConnected() {
@@ -44,26 +51,48 @@ class WebrtcAccessibilityService @Inject constructor() : AccessibilityService() 
         info.feedbackType = AccessibilityServiceInfo.FEEDBACK_VISUAL
         info.notificationTimeout = 1000
         this.serviceInfo = info
-        Log.e(TAG, "onServiceConnected : ")
+        Log.d("WebrtcAccessibilityService", "onServiceConnected : ")
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return START_STICKY
+    }
+
+
+    override fun onAccessibilityEvent(event: AccessibilityEvent) {
+        val nodeInfo = event.source ?: return
+
+        // 뒤는 원하는 대로...
+        val id = nodeInfo.viewIdResourceName // View의 ID를 취득
+        val packageName = event.packageName.toString() // View의 ID를 취득
+        val resourceName = nodeInfo.viewIdResourceName
+        val className = nodeInfo.className.toString() // Class명을 취득
+        val eventType = AccessibilityEvent.eventTypeToString(event.eventType)
+        Log.d("onAccessibilityEvent", "id : $id")
+        Log.d("onAccessibilityEvent", "packageName : $packageName")
+        Log.d("onAccessibilityEvent", "resourceName : $resourceName")
+        Log.d("onAccessibilityEvent", "className : $className")
+        Log.d("onAccessibilityEvent", "eventType : $eventType")
     }
 
 
     override fun onInterrupt() {
         // 서비스 중단 시 호출되는 로직
-        Log.e(TAG, "onInterrupt: something went wrong")
+        Log.d("WebrtcAccessibilityService", "onInterrupt: something went wrong")
     }
 
     override fun onDestroy() {
-        Log.d("MyService", "WebRtcCobrowseAccessibilityService 종료됨")
+        Log.d("WebrtcAccessibilityService", "WebRtcCobrowseAccessibilityService 종료됨")
         unregisterReceiver(myBroadcastReceiver)
-        //        unregisterReceiver(myBroadcastReceiver);
     }
 
 
     companion object {
         private const val TAG = "MyAccessibilityService"
-
         private var isGetAccessibilityServicePermission = false
+        var isBroadCastReceiverRegistered = false
+
+
         private fun isEnabled(context: Context): Boolean {
             try {
                 val info = context.packageManager.getPackageInfo(
@@ -111,20 +140,11 @@ class WebrtcAccessibilityService @Inject constructor() : AccessibilityService() 
 
         fun showSetup(mContext: Context, mActivity: Activity, customDialog: CustomDialog): Boolean {
             if (isEnabled(mContext)) {
-                if (!isRunning(mContext)) {  // if accessibility service is not enabled yet
-                    Log.e(
-                        "CobrowseIO",
-                        "Cobrowse accessibility service is enabled but not running. You need to enable it."
-                    )
-
-//                    val i = Intent(context, E9payCobrowseAccessibilitySetup::class.java)
-//                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//                    context.startActivity(i)
-
+                if (!isRunning(mContext)) {
+                    // if accessibility service is not enabled yet
                     mActivity.runOnUiThread {
                         customDialog.show()
                     }
-
                     return false
 
                 } else { // if accessibility service is already enabled
@@ -136,7 +156,8 @@ class WebrtcAccessibilityService @Inject constructor() : AccessibilityService() 
 
                     return true
                 }
-            } else { // if accessibility service is already enabled
+            } else {
+                // if accessibility service is already enabled
                 Log.i("CobrowseIO", "Cobrowse accessibility service is enabled and running")
                 isGetAccessibilityServicePermission = true
 
@@ -146,7 +167,4 @@ class WebrtcAccessibilityService @Inject constructor() : AccessibilityService() 
     }
 
 
-    override fun onAccessibilityEvent(p0: AccessibilityEvent?) {
-        Log.d("JaehongJaehong", p0?.eventType.toString())
-    }
 }

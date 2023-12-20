@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import com.codewithkael.webrtcscreenshare.R
 import com.codewithkael.webrtcscreenshare.repository.MainRepository
 import dagger.hilt.android.AndroidEntryPoint
+import org.json.JSONObject
 import org.webrtc.DataChannel
 import org.webrtc.MediaStream
 import org.webrtc.SurfaceViewRenderer
@@ -102,6 +103,20 @@ class WebrtcService @Inject constructor() : Service(), MainRepository.Listener {
 
                 }
 
+                "dataChannelMessage_Coordinate" -> {
+                    Log.d("abcabc", "WebrtcService")
+                    val xRatio = intent.getFloatExtra("xRatio", 0.0F)
+                    val yRatio = intent.getFloatExtra("yRatio", 0.0F)
+                    val ratioJson = JSONObject().apply {
+                        put("xRatio", xRatio)
+                        put("yRatio", yRatio)
+                    }
+                    mainRepository.sendJsonRatioData(ratioJson)
+
+                }
+//                startIntent.action = "dataChannelMessage_Coordinate"
+//                        startIntent.putExtra("xRatio", xRatio)
+//                    startIntent.putExtra("yRatio", yRatio)
 
             }
         }
@@ -170,17 +185,9 @@ class WebrtcService @Inject constructor() : Service(), MainRepository.Listener {
         return null
     }
 
-    override fun toastMessageForTest() {
-        listener?.toastMessageForTest()
-    }
 
     override fun statusRemoteControlPermission(status: Boolean) {
         listener?.statusRemoteControlPermission(status)
-    }
-
-    // 추가됨.
-    override fun onDataChannelReceived() {
-        Log.d("abcabc", "WebService - onDataChannelReceived")
     }
 
     override fun onDataReceivedFromChannel(it: DataChannel.Buffer) {

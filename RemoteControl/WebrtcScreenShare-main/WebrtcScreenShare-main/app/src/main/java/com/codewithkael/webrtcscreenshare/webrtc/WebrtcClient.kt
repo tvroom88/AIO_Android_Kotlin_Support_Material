@@ -21,9 +21,10 @@ class WebrtcClient @Inject constructor(
 
     private lateinit var username: String
     private lateinit var observer: Observer
+    private lateinit var dataChannelObserver: DataChannel.Observer
     private lateinit var localSurfaceView: SurfaceViewRenderer
     var listener: Listener? = null
-    var receiverListener : ReceiverListener?=null
+    var receiverListener: ReceiverListener? = null
     private var permissionIntent: Intent? = null
 
     private var peerConnection: PeerConnection? = null
@@ -34,40 +35,6 @@ class WebrtcClient @Inject constructor(
         mandatory.add(MediaConstraints.KeyValuePair("RtpDataChannels", "true"))
     }
 
-    private val dataChannelObserver = object : DataChannel.Observer {
-        override fun onBufferedAmountChange(p0: Long) {}
-        override fun onStateChange() {}
-        override fun onMessage(p0: DataChannel.Buffer?) {
-            Log.d("abcabc", "dataChannelObserver")
-
-            if(p0 == null){
-                Log.d("abcabc", "something is null")
-
-            }else{
-                Log.d("abcabc", "something is not null")
-                val data: ByteBuffer = p0.data
-                val decodedString = StandardCharsets.UTF_8.decode(data).toString()
-                Log.d("abcabc", decodedString)
-            }
-            if(receiverListener == null){
-                Log.d("abcabc", "receiverListener is null")
-
-            }else{
-                Log.d("abcabc", "receiverListener is not null")
-
-            }
-
-
-            //서버에서 좌표를 받아서 Accessibiltiy service에 포함도니 Broadcast Receiver에 보낸다.
-            val intent = Intent("hi")
-            context.sendBroadcast(intent)
-
-            p0?.let { receiverListener?.onDataReceived(it) }
-
-
-        }
-
-    }
 
     private val iceServer = listOf(
         PeerConnection.IceServer.builder("turn:openrelay.metered.ca:443?transport=tcp")
@@ -81,26 +48,29 @@ class WebrtcClient @Inject constructor(
     private var localVideoTrack: VideoTrack? = null
     private var localStream: MediaStream? = null
 
-
     init {
         initPeerConnectionFactory(context)
     }
 
     fun initializeWebrtcClient(
-        username: String, view: SurfaceViewRenderer, observer: Observer
+        username: String,
+        view: SurfaceViewRenderer,
+        dataChannelObserver: DataChannel.Observer,
+        observer: Observer
     ) {
 
         this.username = username
         this.observer = observer
+        this.dataChannelObserver = dataChannelObserver
         peerConnection = createPeerConnection(observer)
         initSurfaceView(view)
-        createDataChannel()
+        createDataChannel(dataChannelObserver)
     }
 
 
-    private fun createDataChannel(){
+    private fun createDataChannel(dataChannelObserver: DataChannel.Observer) {
         val initDataChannel = DataChannel.Init()
-        val dataChannel = peerConnection?.createDataChannel("dataChannelLabel",initDataChannel)
+        val dataChannel = peerConnection?.createDataChannel("dataChannelLabel", initDataChannel)
         dataChannel?.registerObserver(dataChannelObserver)
     }
 
@@ -137,8 +107,8 @@ class WebrtcClient @Inject constructor(
         )
 
 
-//        screenCapturer!!.startCapture(screenWidthPixels,screenHeightPixels,15)
-        screenCapturer!!.startCapture(1080, 1920, 15)
+//        screenCapturer!!.startCapture(screenWidthPixels, screenHeightPixels, 15)
+        screenCapturer!!.startCapture(720, 1280, 15)
 
         localVideoTrack =
             peerConnectionFactory.createVideoTrack(localTrackId + "_video", localVideoSource)
@@ -259,7 +229,7 @@ class WebrtcClient @Inject constructor(
         localSurfaceView.let {
             it.clearImage()
             it.release()
-            initializeWebrtcClient(username, it, observer)
+            initializeWebrtcClient(username, it, dataChannelObserver, observer)
         }
     }
 
@@ -268,7 +238,7 @@ class WebrtcClient @Inject constructor(
         fun onTransferEventToSocket(data: DataModel)
     }
 
-    interface ReceiverListener{
-        fun onDataReceived(it:DataChannel.Buffer)
+    interface ReceiverListener {
+        fun onDataReceived(it: DataChannel.Buffer)
     }
 }

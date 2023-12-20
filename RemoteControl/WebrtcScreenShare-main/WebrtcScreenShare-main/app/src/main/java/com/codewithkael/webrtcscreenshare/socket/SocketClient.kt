@@ -32,7 +32,7 @@ class SocketClient @Inject constructor(
 //        메가 커피 : 172.30.1.99
 //        회사 : ws://192.168.50.177:3000
 //        172.30.1.62
-        webSocket= object : WebSocketClient(URI("ws://172.30.1.62:3000")){
+        webSocket= object : WebSocketClient(URI("ws://192.168.50.177:3000")){
             override fun onOpen(handshakedata: ServerHandshake?) {
                 sendMessageToSocket(
                     DataModel(

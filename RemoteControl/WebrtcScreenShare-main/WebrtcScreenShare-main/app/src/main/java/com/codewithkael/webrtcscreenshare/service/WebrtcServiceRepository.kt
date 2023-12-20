@@ -103,7 +103,7 @@ class WebrtcServiceRepository @Inject constructor(
 
     // status that caller accept or reject permission of remote control
     fun sendAccessibilityServiceStatusToServer(status: Boolean, target: String) {
-        Log.d("goodgoodgood", "sendAccessibilityServiceStatusToServer")
+
         val thread = Thread {
             val startIntent = Intent(context, WebrtcService::class.java)
             startIntent.action = "accessibilityServiceStatusIntent"
@@ -119,11 +119,27 @@ class WebrtcServiceRepository @Inject constructor(
     }
 
 
+    //For Test
     fun sendDataChannelMessage() {
         Log.d("abcabc", "WebrtcServiceRepository - sendDataChannelMessage")
         val thread = Thread {
             val startIntent = Intent(context, WebrtcService::class.java)
             startIntent.action = "dataChannelMessage"
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(startIntent)
+            } else {
+                context.startService(startIntent)
+            }
+        }
+        thread.start()
+    }
+
+    fun sendDataChannelMessage(xRatio: Float, yRatio: Float) {
+        val thread = Thread {
+            val startIntent = Intent(context, WebrtcService::class.java)
+            startIntent.action = "dataChannelMessage_Coordinate"
+            startIntent.putExtra("xRatio", xRatio)
+            startIntent.putExtra("yRatio", yRatio)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(startIntent)
             } else {

@@ -24,5 +24,4 @@ class Presenter(
             mainView!!.hideProgress()
         }
     }
-
 }

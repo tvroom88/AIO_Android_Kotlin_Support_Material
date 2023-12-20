@@ -11,6 +11,7 @@ import com.google.gson.Gson
 import org.json.JSONObject
 import org.webrtc.*
 import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
 
@@ -112,9 +113,17 @@ class MainRepository @Inject constructor(
         webrtcClient.closeConnection()
     }
 
+    private val dataChannelObserver = object : DataChannel.Observer {
+        override fun onBufferedAmountChange(p0: Long) {}
+        override fun onStateChange() {}
+        override fun onMessage(p0: DataChannel.Buffer?) {
+            p0?.let { onDataReceived(it) }
+        }
+    }
+
     private fun initWebrtcClient() {
         webrtcClient.listener = this
-        webrtcClient.initializeWebrtcClient(username, surfaceView,
+        webrtcClient.initializeWebrtcClient(username, surfaceView, dataChannelObserver,
             object : MyPeerObserver() {
                 override fun onIceCandidate(p0: IceCandidate?) {
                     super.onIceCandidate(p0)
@@ -138,7 +147,6 @@ class MainRepository @Inject constructor(
                 override fun onDataChannel(p0: DataChannel?) {
                     super.onDataChannel(p0)
                     dataChannel = p0
-                    listener?.onDataChannelReceived()
                 }
             })
     }
@@ -196,19 +204,13 @@ class MainRepository @Inject constructor(
                     null
                 }
 
-                if (dataModel != null) {
-                    Log.d(
-                        "RemoteControl",
-                        "dataModel.type.toString() : ${dataModel.type.toString()}"
-                    )
-                    Log.d("Jaehong", "dataModel.type.username : ${dataModel.username}")
-                }
-                this.target = model.username
+//                this.target = model.username
                 listener?.openRequestRemoteControlPermissionView(target) //Caller
+
+
             }
 
             AccessibilityAccept -> {
-                listener?.toastMessageForTest()
                 listener?.statusRemoteControlPermission(true)
             }
 
@@ -232,15 +234,8 @@ class MainRepository @Inject constructor(
         fun onCallEndReceived()
         fun onRemoteStreamAdded(stream: MediaStream)
         fun openRequestRemoteControlPermissionView(target: String) // request to user to allow to enable accessibility Service
-
-        // Todo : just for test - after finishing test, remove it
-        fun toastMessageForTest()
-
-        fun statusRemoteControlPermission(status: Boolean)
-
-
-        fun onDataChannelReceived()
-        fun onDataReceivedFromChannel(it: DataChannel.Buffer)
+        fun statusRemoteControlPermission(status: Boolean) // check whether caller allow remote control caller's phone
+        fun onDataReceivedFromChannel(it: DataChannel.Buffer) // get X and Y coordinate data from callee
     }
 
 
@@ -256,6 +251,24 @@ class MainRepository @Inject constructor(
 
         // JSON 객체를 문자열로 변환
         val jsonString = jsonExample.toString()
+
+        // 문자열을 바이트 배열로 변환
+        val byteArray = jsonString.toByteArray(Charsets.UTF_8)
+
+        // 바이트 배열을 ByteBuffer로 감싸기
+        val buffer = ByteBuffer.wrap(byteArray)
+
+        // DataChannel을 통해 바이트 배열 전송
+        dataChannel?.send(DataChannel.Buffer(buffer, false))
+    }
+
+
+    fun sendJsonRatioData(jsonRatio: JSONObject) {
+
+        Log.d("abcabc", "sendJsonData")
+
+        // JSON 객체를 문자열로 변환
+        val jsonString = jsonRatio.toString()
 
         // 문자열을 바이트 배열로 변환
         val byteArray = jsonString.toByteArray(Charsets.UTF_8)

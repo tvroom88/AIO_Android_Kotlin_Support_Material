@@ -5,8 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.media.projection.MediaProjectionManager
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.MotionEvent
+import android.view.ViewTreeObserver
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -15,6 +18,11 @@ import com.codewithkael.webrtcscreenshare.repository.MainRepository
 import com.codewithkael.webrtcscreenshare.service.WebrtcAccessibilityService
 import com.codewithkael.webrtcscreenshare.service.WebrtcService
 import com.codewithkael.webrtcscreenshare.service.WebrtcServiceRepository
+import com.codewithkael.webrtcscreenshare.utils.DataModel
+import com.codewithkael.webrtcscreenshare.utils.DeviceSizeUtil
+import com.codewithkael.webrtcscreenshare.utils.RatioModel
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import org.webrtc.DataChannel
 import org.webrtc.MediaStream
@@ -23,7 +31,9 @@ import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
-
+/**
+ * OnResume 다시 comment 지워야함
+ */
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), MainRepository.Listener {
 
@@ -43,45 +53,39 @@ class MainActivity : AppCompatActivity(), MainRepository.Listener {
     private lateinit var customDialog: CustomDialog
 
     private lateinit var tempTarget: String
+
     private var isAllowedAccessibilityService: Boolean = false
 
+    private var surfaceWidth = 0
+    private var surfaceHeight = 0
 
 
+    private var gson: Gson? = null
+
+
+    private var screenWidthPixels = 0
+    private var screenHeightPixels = 0
+
+
+    private lateinit var deviceSizeUtil: DeviceSizeUtil
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-//        val observer: ViewTreeObserver = binding.surfaceView.viewTreeObserver
-//        observer.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
-//            override fun onGlobalLayout() {
-//                val left: Int = binding.surfaceView.left
-//                val top: Int = binding.surfaceView.top
-//                val right: Int = binding.surfaceView.right
-//                val bottom: Int = binding.surfaceView.bottom
-//
-//                Log.d("abcabcabc", "binding.surfaceView.left ViewTreeObserver" + left)
-//                Log.d("abcabcabc", "binding.surfaceView.top ViewTreeObserver" + top)
-//                binding.surfaceView.viewTreeObserver.removeGlobalOnLayoutListener(this)
-//            }
-//        })
-
-
         init()
     }
 
     override fun onResume() {
         super.onResume()
+
         if (customDialog.isShowing && WebrtcAccessibilityService.isRunning(this)) {
             customDialog.dismiss()
             webrtcServiceRepository.sendAccessibilityServiceStatusToServer(true, tempTarget)
-
-            Log.d("Jaehong", "OnResumeOnResume")
         } else {
 
         }
-
 
     }
 
@@ -92,7 +96,29 @@ class MainActivity : AppCompatActivity(), MainRepository.Listener {
             finish()
         }
 
+        deviceSizeUtil = DeviceSizeUtil()
+
+        screenWidthPixels = deviceSizeUtil.getDeviceWidth(this)
+        screenHeightPixels = deviceSizeUtil.getDeviceHeight(this)
+
+
+        // to get Accessibility Service permission, first show requesting permission dialog
         customDialog = CustomDialog(this)
+
+
+        gson = GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create()
+
+
+        //테스트용 버튼
+        binding.testBroadcastReceiver.setOnClickListener {
+            if (WebrtcAccessibilityService.showSetup(this, this, customDialog)) {
+                val intent1 = Intent("startBroadcastReceiver")
+                sendBroadcast(intent1)
+
+                val intent2 = Intent("sendXandYCoordination")
+                sendBroadcast(intent2)
+            }
+        }
 
         WebrtcService.surfaceView = binding.surfaceView
         WebrtcService.listener = this
@@ -101,16 +127,23 @@ class MainActivity : AppCompatActivity(), MainRepository.Listener {
             startScreenCapture()
         }
 
-        binding.testDataChannelButton.setOnClickListener {
-            webrtcServiceRepository.sendDataChannelMessage()
-        }
-
-//        binding.surfaceView.setScalingType(ScalingType.SCALE_ASPECT_FILL)
         binding.surfaceView.setScalingType(ScalingType.SCALE_ASPECT_FILL)
         binding.surfaceView.requestLayout();
 
 
-        binding.surfaceView.setOnTouchListener { v, event ->
+        // To get surfaceView width and height.
+        val observer: ViewTreeObserver = binding.surfaceView.viewTreeObserver
+        observer.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+
+                surfaceWidth = binding.surfaceView.width
+                surfaceHeight = binding.surfaceView.height
+                binding.surfaceView.viewTreeObserver.removeGlobalOnLayoutListener(this)
+            }
+        })
+
+        // To get touched position.
+        binding.surfaceView.setOnTouchListener { _, event ->
             val action = event.action
             val curX = event.x // 눌린 곳의 X좌표
             val curY = event.y // 눌린 곳의 Y좌표
@@ -126,15 +159,18 @@ class MainActivity : AppCompatActivity(), MainRepository.Listener {
 
                 MotionEvent.ACTION_UP -> { // 누른 걸 뗐을 때
                     Log.d("setOnTouchListener", "손가락 뗌 : $curX, $curY")
+                    Log.d("setOnTouchListener", "크기 너비 : $surfaceWidth, $surfaceHeight")
+                    Log.d(
+                        "setOnTouchListener",
+                        "isAllowedAccessibilityService : " + isAllowedAccessibilityService
+                    )
 
-                    //서버에서 좌표를 받아서 Accessibiltiy service에 포함도니 Broadcast Receiver에 보낸다.
+                    //After getting x, y position, send to caller through dataChannel
                     if (isAllowedAccessibilityService) {
-                        val intent = Intent("sendXandYCoordination")
-//                    intent.putExtra("xRatio", latioX)
-//                    intent.putExtra("yRatio", latioY)
-                        sendBroadcast(intent)
+                        val ratioX = curX / surfaceWidth.toFloat()
+                        val ratioY = curY / surfaceHeight.toFloat()
+                        webrtcServiceRepository.sendDataChannelMessage(ratioX, ratioY)
                     }
-
                 }
             }
             true
@@ -222,19 +258,8 @@ class MainActivity : AppCompatActivity(), MainRepository.Listener {
     override fun openRequestRemoteControlPermissionView(target: String) {
         tempTarget = target
 
-        // 이건 이미 true일 상황일때만임. 그렇기 때문에 accessibilityService에서 승낙하고 돌아올떄도
         if (WebrtcAccessibilityService.showSetup(this, this, customDialog)) {
             webrtcServiceRepository.sendAccessibilityServiceStatusToServer(true, target)
-        } else {
-            //OnResume
-        }
-    }
-
-
-    override fun toastMessageForTest() {
-        runOnUiThread {
-            Toast.makeText(this, "Coming Here", Toast.LENGTH_SHORT).show()
-            binding.textview123.isVisible = true
         }
     }
 
@@ -253,29 +278,27 @@ class MainActivity : AppCompatActivity(), MainRepository.Listener {
         }
     }
 
-
-    override fun onDataChannelReceived() {
-//        runOnUiThread {
-//            views.apply {
-//                requestLayout.isVisible = false
-//                receivedDataLayout.isVisible = true
-//                sendDataLayout.isVisible = true
-//            }
-//        }
-    }
-
     override fun onDataReceivedFromChannel(it: DataChannel.Buffer) {
-        Log.d("abcabc", "MainActivity")
 
-//        runOnUiThread {
-            val data: ByteBuffer = it.data
-            val decodedString = StandardCharsets.UTF_8.decode(data).toString()
+        val data: ByteBuffer = it.data
+        val decodedString = StandardCharsets.UTF_8.decode(data).toString()
 
-            Log.d("abcabc", decodedString)
-//        }
+        var ratioModel: RatioModel? = null
+        try {
+            ratioModel = gson?.fromJson(decodedString, RatioModel::class.java)
+
+            ratioModel?.let {
+                val intent = Intent("sendXandYCoordination")
+                intent.putExtra("xRatio", ratioModel.xRatio * screenWidthPixels.toFloat())
+                intent.putExtra("yRatio", ratioModel.yRatio * screenHeightPixels.toFloat())
+                sendBroadcast(intent)
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "error : $e")
+        }
+
+
     }
-
-
 
 
 }
