@@ -25,7 +25,6 @@ class WebrtcService @Inject constructor() : Service(), MainRepository.Listener {
         var screenPermissionIntent: Intent? = null
         var surfaceView: SurfaceViewRenderer? = null
         var listener: MainRepository.Listener? = null
-//        lateinit var tempTarget: String
     }
 
     @Inject
@@ -79,8 +78,6 @@ class WebrtcService @Inject constructor() : Service(), MainRepository.Listener {
                 }
 
                 // Callee send request to Caller "Can I control your device remotely?"
-
-                //Caller AA Callee BB  BB -> AA
                 "RequestRemoteControlIntent" -> {
                     val target = intent.getStringExtra("target")
                     target?.let {
@@ -97,10 +94,9 @@ class WebrtcService @Inject constructor() : Service(), MainRepository.Listener {
                     }
                 }
 
+                // send X, Y coordinate through dataChannel
                 "dataChannelMessage" -> {
-                    Log.d("abcabc", "WebrtcService")
                     mainRepository.sendJsonData()
-
                 }
 
                 "dataChannelMessage_Coordinate" -> {
@@ -114,9 +110,6 @@ class WebrtcService @Inject constructor() : Service(), MainRepository.Listener {
                     mainRepository.sendJsonRatioData(ratioJson)
 
                 }
-//                startIntent.action = "dataChannelMessage_Coordinate"
-//                        startIntent.putExtra("xRatio", xRatio)
-//                    startIntent.putExtra("yRatio", yRatio)
 
             }
         }
@@ -156,10 +149,6 @@ class WebrtcService @Inject constructor() : Service(), MainRepository.Listener {
     }
 
 
-//    fun sendAccessibilityServiceStatusToServer(status: Boolean) {
-//        mainRepository.sendAccessibilityPermissionStatus(status)
-//    }
-
     override fun onConnectionRequestReceived(target: String) {
         listener?.onConnectionRequestReceived(target)
     }
@@ -191,8 +180,6 @@ class WebrtcService @Inject constructor() : Service(), MainRepository.Listener {
     }
 
     override fun onDataReceivedFromChannel(it: DataChannel.Buffer) {
-        Log.d("abcabc", "WebrtcService")
-
         listener?.onDataReceivedFromChannel(it)
     }
 

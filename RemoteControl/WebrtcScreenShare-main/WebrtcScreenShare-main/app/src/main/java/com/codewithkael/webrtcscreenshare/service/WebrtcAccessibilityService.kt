@@ -89,9 +89,7 @@ class WebrtcAccessibilityService : AccessibilityService() {
 
     companion object {
         private const val TAG = "MyAccessibilityService"
-        private var isGetAccessibilityServicePermission = false
         var isBroadCastReceiverRegistered = false
-
 
         private fun isEnabled(context: Context): Boolean {
             try {
@@ -99,26 +97,27 @@ class WebrtcAccessibilityService : AccessibilityService() {
                     context.packageName,
                     PackageManager.GET_SERVICES
                 )
+
                 if (info.services == null) {
                     return false
                 }
+
                 val var2 = info.services
                 val var3 = var2.size
                 for (var4 in 0 until var3) {
                     val service = var2[var4]
-                    if (WebrtcAccessibilityService::class.java.name == service.name) {
-                        return "android.permission.BIND_ACCESSIBILITY_SERVICE" == service.permission
+                    if (service.name == WebrtcAccessibilityService::class.java.name) {
+                        return service.permission == "android.permission.BIND_ACCESSIBILITY_SERVICE"
                     }
                 }
             } catch (var6: PackageManager.NameNotFoundException) {
-                Log.e("CobrowseIO", "Failed to read the app package info", var6)
+                Log.i("WebrtcAccessibilityService", "Failed to read the app package info $var6")
             }
             return false
         }
 
         fun isRunning(context: Context): Boolean {
-            val expectedComponentName =
-                ComponentName(context, WebrtcAccessibilityService::class.java)
+            val componentName = ComponentName(context, WebrtcAccessibilityService::class.java)
             val enabledServicesSetting =
                 Settings.Secure.getString(context.contentResolver, "enabled_accessibility_services")
             return if (enabledServicesSetting == null) {
@@ -133,7 +132,7 @@ class WebrtcAccessibilityService : AccessibilityService() {
                     }
                     val componentNameString = colonSplitter.next()
                     enabledService = ComponentName.unflattenFromString(componentNameString)
-                } while (enabledService == null || enabledService != expectedComponentName)
+                } while (enabledService == null || enabledService != componentName)
                 true
             }
         }
@@ -147,20 +146,33 @@ class WebrtcAccessibilityService : AccessibilityService() {
                     }
                     return false
 
-                } else { // if accessibility service is already enabled
-                    Log.i("CobrowseIO", "Cobrowse accessibility service is enabled and running")
-                    mActivity.runOnUiThread {
-                        Toast.makeText(mContext, "이미 허가 하셨습니다.", Toast.LENGTH_SHORT).show()
-                    }
-                    isGetAccessibilityServicePermission = true
+                } else {
+                    // if accessibility service is already enabled
+                    Log.i(
+                        "WebrtcAccessibilityService",
+                        "Accessibility service is enabled and running"
+                    )
 
+                    mActivity.runOnUiThread {
+                        Toast.makeText(
+                            mContext,
+                            "Already Permission is allowed. You don't need to do anything to enable accessibiltiy Service",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                     return true
                 }
             } else {
                 // if accessibility service is already enabled
-                Log.i("CobrowseIO", "Cobrowse accessibility service is enabled and running")
-                isGetAccessibilityServicePermission = true
 
+                Log.i("WebrtcAccessibilityService", "Accessibility service is enabled and running")
+                mActivity.runOnUiThread {
+                    Toast.makeText(
+                        mContext,
+                        "Already Permission is allowed. You don't need to do anything to enable accessibiltiy Service",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
                 return true
             }
         }

@@ -5,12 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.media.projection.MediaProjectionManager
 import android.os.Bundle
-import android.util.DisplayMetrics
 import android.util.Log
 import android.view.MotionEvent
 import android.view.ViewTreeObserver
-import android.view.WindowManager
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.codewithkael.webrtcscreenshare.databinding.ActivityMainBinding
@@ -18,7 +15,6 @@ import com.codewithkael.webrtcscreenshare.repository.MainRepository
 import com.codewithkael.webrtcscreenshare.service.WebrtcAccessibilityService
 import com.codewithkael.webrtcscreenshare.service.WebrtcService
 import com.codewithkael.webrtcscreenshare.service.WebrtcServiceRepository
-import com.codewithkael.webrtcscreenshare.utils.DataModel
 import com.codewithkael.webrtcscreenshare.utils.DeviceSizeUtil
 import com.codewithkael.webrtcscreenshare.utils.RatioModel
 import com.google.gson.Gson
@@ -31,16 +27,11 @@ import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
-/**
- * OnResume 다시 comment 지워야함
- */
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), MainRepository.Listener {
 
     private var username: String? = null
     private lateinit var binding: ActivityMainBinding
-
-    private var isGetAccessibilityServicePermission = false
 
     @Inject
     lateinit var webrtcServiceRepository: WebrtcServiceRepository
@@ -62,10 +53,8 @@ class MainActivity : AppCompatActivity(), MainRepository.Listener {
 
     private var gson: Gson? = null
 
-
     private var screenWidthPixels = 0
     private var screenHeightPixels = 0
-
 
     private lateinit var deviceSizeUtil: DeviceSizeUtil
 
@@ -79,14 +68,10 @@ class MainActivity : AppCompatActivity(), MainRepository.Listener {
 
     override fun onResume() {
         super.onResume()
-
         if (customDialog.isShowing && WebrtcAccessibilityService.isRunning(this)) {
             customDialog.dismiss()
             webrtcServiceRepository.sendAccessibilityServiceStatusToServer(true, tempTarget)
-        } else {
-
         }
-
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -109,17 +94,6 @@ class MainActivity : AppCompatActivity(), MainRepository.Listener {
         gson = GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create()
 
 
-        //테스트용 버튼
-        binding.testBroadcastReceiver.setOnClickListener {
-            if (WebrtcAccessibilityService.showSetup(this, this, customDialog)) {
-                val intent1 = Intent("startBroadcastReceiver")
-                sendBroadcast(intent1)
-
-                val intent2 = Intent("sendXandYCoordination")
-                sendBroadcast(intent2)
-            }
-        }
-
         WebrtcService.surfaceView = binding.surfaceView
         WebrtcService.listener = this
         webrtcServiceRepository.startIntent(username!!)
@@ -128,7 +102,7 @@ class MainActivity : AppCompatActivity(), MainRepository.Listener {
         }
 
         binding.surfaceView.setScalingType(ScalingType.SCALE_ASPECT_FILL)
-        binding.surfaceView.requestLayout();
+        binding.surfaceView.requestLayout()
 
 
         // To get surfaceView width and height.
@@ -160,10 +134,7 @@ class MainActivity : AppCompatActivity(), MainRepository.Listener {
                 MotionEvent.ACTION_UP -> { // 누른 걸 뗐을 때
                     Log.d("setOnTouchListener", "손가락 뗌 : $curX, $curY")
                     Log.d("setOnTouchListener", "크기 너비 : $surfaceWidth, $surfaceHeight")
-                    Log.d(
-                        "setOnTouchListener",
-                        "isAllowedAccessibilityService : " + isAllowedAccessibilityService
-                    )
+
 
                     //After getting x, y position, send to caller through dataChannel
                     if (isAllowedAccessibilityService) {
@@ -258,32 +229,27 @@ class MainActivity : AppCompatActivity(), MainRepository.Listener {
     override fun openRequestRemoteControlPermissionView(target: String) {
         tempTarget = target
 
+        /**
+         *  If Accessibility Service is already allowed, then just show toast message.
+         *  otherwise, show dialog to get permission
+         */
         if (WebrtcAccessibilityService.showSetup(this, this, customDialog)) {
             webrtcServiceRepository.sendAccessibilityServiceStatusToServer(true, target)
         }
     }
 
-
+    // Callee check whether Caller allow or not remote control
     override fun statusRemoteControlPermission(status: Boolean) {
         isAllowedAccessibilityService = status
     }
 
-
-    private fun restartUi() {
-        binding.apply {
-            disconnectBtn.isVisible = false
-            requestLayout.isVisible = true
-            notificationLayout.isVisible = false
-            surfaceView.isVisible = false
-        }
-    }
 
     override fun onDataReceivedFromChannel(it: DataChannel.Buffer) {
 
         val data: ByteBuffer = it.data
         val decodedString = StandardCharsets.UTF_8.decode(data).toString()
 
-        var ratioModel: RatioModel? = null
+        val ratioModel: RatioModel?
         try {
             ratioModel = gson?.fromJson(decodedString, RatioModel::class.java)
 
@@ -296,9 +262,14 @@ class MainActivity : AppCompatActivity(), MainRepository.Listener {
         } catch (e: Exception) {
             Log.e("MainActivity", "error : $e")
         }
-
-
     }
 
-
+    private fun restartUi() {
+        binding.apply {
+            disconnectBtn.isVisible = false
+            requestLayout.isVisible = true
+            notificationLayout.isVisible = false
+            surfaceView.isVisible = false
+        }
+    }
 }
