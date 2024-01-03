@@ -10,6 +10,7 @@ import com.example.hiltapplication.module.AppNavigator
 import com.example.hiltapplication.module.CatAnimalQualifier
 import com.example.hiltapplication.module.DogAnimalQualifier
 import com.example.hiltapplication.store.Store
+import com.example.hiltapplication.viewModels.MyViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import okhttp3.Call
 import okhttp3.Callback
@@ -50,6 +51,9 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var navigator: AppNavigator
 
+
+//    val viewModel: MyViewModel by viewModel()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -85,5 +89,7 @@ class MainActivity : AppCompatActivity() {
                 Log.i("httpClient", "Network call - ${response.body}")
             }
         })
+
+
     }
 }
