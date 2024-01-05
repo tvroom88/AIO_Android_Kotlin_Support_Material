@@ -1,7 +1,9 @@
 package com.example.hiltapplication.store
 
+import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import dagger.hilt.android.qualifiers.ActivityContext
 import javax.inject.Inject
 
 class Store @Inject constructor()  {
@@ -9,7 +11,6 @@ class Store @Inject constructor()  {
 
     fun open(){
         Log.d(TAG, "OPEN")
-//        Toast.makeText(this, "Store is opened", Toast.LENGTH_SHORT).show()
     }
 
     fun close(){

@@ -9,6 +9,7 @@ import com.example.hiltapplication.animal.Cat
 import com.example.hiltapplication.module.AppNavigator
 import com.example.hiltapplication.module.CatAnimalQualifier
 import com.example.hiltapplication.module.DogAnimalQualifier
+import com.example.hiltapplication.module.Screens
 import com.example.hiltapplication.store.Store
 import com.example.hiltapplication.viewModels.MyViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -47,7 +48,6 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var request: Request
 
-    //    @Inject lateinit var appNav:AppNavigator
     @Inject
     lateinit var navigator: AppNavigator
 
@@ -58,38 +58,32 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        store.open()
 
-        //의존성 주입이 없을때는 이런 방식으로
+//의존성 주입이 없을때는 이런 방식으로
 //        store = Store()
 //        store.open()
 
+        //의존성 주입이 있을때
+//        store.open()
+//
+//        animal.bark()
+//
+//        // Animal 타입을 해준 Cat
+//        animalCat.bark()
+//
+//        // Animal 타입을 해준 Dog
+//        animalDog.bark()
+//
+//        httpClient.newCall(request).enqueue(object : Callback {
+//            override fun onFailure(call: Call, e: IOException) {
+//                Log.i("httpClient", "Network call error - ${call}, err msg - ${e.message}")
+//            }
+//
+//            override fun onResponse(call: Call, response: Response) {
+//                Log.i("httpClient", "Network call - ${response.body}")
+//            }
+//        })
 
-        animal.bark()
-
-        // Animal 타입을 해준 Cat
-        animalCat.bark()
-
-        // Animal 타입을 해준 Dog
-        animalDog.bark()
-
-        // request 를 하기 위한 부분
-//        val request = Request.Builder() // Request.Builder
-//            .url("https://www.google.com")
-//            .header("User-Agent", "OkHttp Example")
-//            .build()
-
-
-        httpClient.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                Log.i("httpClient", "Network call error - ${call}, err msg - ${e.message}")
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                Log.i("httpClient", "Network call - ${response.body}")
-            }
-        })
-
-
+        navigator.navigateTo(Screens.FIRST)
     }
 }

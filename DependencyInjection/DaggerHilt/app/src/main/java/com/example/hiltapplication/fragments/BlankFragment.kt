@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import com.example.hiltapplication.R
 import com.example.hiltapplication.animal.Animal
 import com.example.hiltapplication.animal.Cat
+import com.example.hiltapplication.animal.Dog
 import com.example.hiltapplication.module.CatAnimalQualifier
 import com.example.hiltapplication.module.DogAnimalQualifier
 import com.example.hiltapplication.store.Store
@@ -22,7 +23,10 @@ class BlankFragment : Fragment() {
     lateinit var store: Store
 
     @Inject
-    lateinit var animal: Cat
+    lateinit var cat: Cat
+
+    @Inject
+    lateinit var dog: Dog
 
     @CatAnimalQualifier
     @Inject
@@ -43,7 +47,7 @@ class BlankFragment : Fragment() {
 
         store.open()
 
-        animal.bark()
+        cat.bark()
 
         animalCat.bark()
 
