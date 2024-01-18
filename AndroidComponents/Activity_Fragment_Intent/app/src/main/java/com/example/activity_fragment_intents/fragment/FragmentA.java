@@ -15,7 +15,7 @@ import com.example.activity_fragment_intents.R;
 
 public class FragmentA extends Fragment {
 
-    private static final String TAG = "Fragment-LifeCycle";
+    private static final String TAG = "Fragment-LifeCycle1";
 
     public FragmentA() {
         // Required empty public constructor
