@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/txtTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:text="Android Anr Test Project"
+        android:textSize="30dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 1번째 예제-->
+    <TextView
+        android:id="@+id/subtitle1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginEnd="30dp"
+        android:text="1. 입력 전달 타임아웃: 앱이 입력 이벤트(예: 키 누름 또는 화면 터치)에 5초 이내에 응답하지 않은 경우"
+        android:textSize="14dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txtTitle" />
+
+
+    <Button
+        android:id="@+id/countBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="count button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/subtitle1" />
+
+
+    <!-- 2번째 예제-->
+    <TextView
+        android:id="@+id/subtitle2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:text="2. 서비스 실행: 앱에서 선언한 서비스가 몇 초 이내에 Service.onCreate() 및 Service.onStartCommand()/Service.onBind() 실행을 완료할 수 없는 경우"
+        app:layout_constraintEnd_toEndOf="@+id/subtitle1"
+        app:layout_constraintStart_toStartOf="@+id/subtitle1"
+        app:layout_constraintTop_toBottomOf="@+id/countBtn" />
+
+    <Button
+        android:id="@+id/startServiceBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="start Service"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/subtitle2" />
+
+    <Button
+        android:id="@+id/stopServiceBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="stop Service"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/startServiceBtn" />
+
+    <TextView
+        android:id="@+id/subtitle3"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:text="3. Service.startForeground()가 호출되지 않음: 앱이 Context.startForegroundService()를 사용하여 포그라운드에서 새 서비스를 시작했지만 서비스가 5초 내에 startForeground()를 호출하지 않은 경우"
+        app:layout_constraintEnd_toEndOf="@+id/subtitle2"
+        app:layout_constraintStart_toStartOf="@+id/subtitle2"
+        app:layout_constraintTop_toBottomOf="@+id/stopServiceBtn" />
+
+    <Button
+        android:id="@+id/startForegroundServiceBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="startForegroundServiceBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/subtitle3" />
+
+    <Button
+        android:id="@+id/stopForegroundServiceBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="stopForegroundServiceBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/startForegroundServiceBtn" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
