@@ -1,5 +1,6 @@
 package com.example.rxjavapractice.network
 
+<<<<<<< HEAD
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -15,4 +16,7 @@ object RetrofitInstance {
     fun getInstance(): Retrofit {
         return client
     }
+=======
+class RetrofitInstance {
+>>>>>>> 61b1f7696213fd0e8c836cd7963b966641208c78
 }

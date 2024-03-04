@@ -1,5 +1,6 @@
 package com.example.rxjavapractice.dataModel
 
+<<<<<<< HEAD
 import com.google.gson.annotations.SerializedName
 
 
@@ -10,3 +11,7 @@ data class CountryModel(
     @field:SerializedName("capital") var capital: String,
     @field:SerializedName("flagPNG") var flag: String
 )
+=======
+class CountryModel {
+}
+>>>>>>> 61b1f7696213fd0e8c836cd7963b966641208c78

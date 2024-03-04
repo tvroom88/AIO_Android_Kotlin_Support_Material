@@ -1,5 +1,6 @@
 package com.example.rxjavapractice.views.adapter
 
+<<<<<<< HEAD
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -56,3 +57,7 @@ class CountryListAdapter(countries: MutableList<CountryModel>) :
         }
     }
 }
+=======
+class CountryListAdapter {
+}
+>>>>>>> 61b1f7696213fd0e8c836cd7963b966641208c78

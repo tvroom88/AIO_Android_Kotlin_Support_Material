@@ -1,5 +1,6 @@
 package com.example.rxjavapractice.views.countries
 
+<<<<<<< HEAD
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -61,3 +62,7 @@ class ShowCountriesViewModel : ViewModel() {
         disposable.clear()
     }
 }
+=======
+class ShowCountriesViewModel {
+}
+>>>>>>> 61b1f7696213fd0e8c836cd7963b966641208c78

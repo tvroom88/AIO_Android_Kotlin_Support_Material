@@ -20,12 +20,20 @@
 
         <TextView
             android:id="@+id/name"
+<<<<<<< HEAD
+=======
+            style="@style/Title"
+>>>>>>> 61b1f7696213fd0e8c836cd7963b966641208c78
             android:text="country"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
         <TextView
             android:id="@+id/capital"
             android:text="capital"
+<<<<<<< HEAD
+=======
+            style="@style/Text"
+>>>>>>> 61b1f7696213fd0e8c836cd7963b966641208c78
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
