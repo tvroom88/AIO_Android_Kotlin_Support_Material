@@ -1,15 +1,14 @@
 package com.example.rxjavapractice
 
-import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.core.ObservableEmitter
-import io.reactivex.rxjava3.core.ObservableOnSubscribe
-import io.reactivex.rxjava3.core.Observer
-import io.reactivex.rxjava3.observers.DisposableObserver
+import com.example.rxjavapractice.views.countries.ShowCountriesActivity
+import io.reactivex.Observable
+import io.reactivex.observers.DisposableObserver
+
 
 /**
  * 참고 url
@@ -18,24 +17,32 @@ import io.reactivex.rxjava3.observers.DisposableObserver
 class MainActivity : AppCompatActivity() {
 
     private lateinit var textView: TextView
+    private lateinit var exBtn1: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         textView = findViewById(R.id.textView)
+        exBtn1 = findViewById(R.id.exBtn1)
 
-        // Todo: 여기서 붙어 있는 object가 무엇인지 알아보기
+        exBtn1.setOnClickListener {
+            val intent = Intent(this, ShowCountriesActivity::class.java)
+            startActivity(intent)
+        }
+
+        simpleObservableUsage()
+        observableClassFactoryFunction()
+    }
+
+    private fun simpleObservableUsage() {
+        // 1
         val observer = object : DisposableObserver<String>() {
             override fun onNext(s: String) {
                 textView.text = s
             }
 
-            override fun onError(e: Throwable) {
-            }
-
-            override fun onComplete() {
-            }
+            override fun onError(e: Throwable) {}
+            override fun onComplete() {}
         }
 
         Observable.create { emitter ->
@@ -43,7 +50,7 @@ class MainActivity : AppCompatActivity() {
             emitter.onComplete()
         }.subscribe(observer)
 
-
+        // 2
         Observable.create<String> { emitter ->
             emitter.onNext("Hello world1")
             emitter.onNext("Hello world2")
@@ -52,7 +59,20 @@ class MainActivity : AppCompatActivity() {
             textView.text = o
         }
 
+        // 3
+        Observable.just("changed")
+            .subscribe { o ->
+                textView.text = o
+            }
 
+        // 4
+        Observable.just(1, 2, 3)
+            .map { x: Int -> x * 10 }
+            .subscribe { x: Int? -> println(x) }
+    }
 
+    private fun observableClassFactoryFunction() {
+        Observable.just("a", "b", "c", "d", "e")
+            .subscribe(System.out::println)
     }
 }
