@@ -1,15 +1,16 @@
 package com.example.rxjavapractice.repository
 
-<<<<<<< HEAD
+import com.example.rxjavapractice.dataModel.CountryModel
 import com.example.rxjavapractice.network.CountriesApi
 import com.example.rxjavapractice.network.RetrofitInstance
+import io.reactivex.Single
 
 class NetworkRepository {
 
-    private val client = RetrofitInstance.getInstance().create(CountriesApi::class.java)
-
-    suspend fun getCountries() = client.getCountries()
-=======
-class NetworkRepository {
->>>>>>> 61b1f7696213fd0e8c836cd7963b966641208c78
+//    private val client: CountriesApi =
+//        RetrofitInstance.getInstance().create(CountriesApi::class.java)
+//
+//    fun getCountries(): Single<List<CountryModel>> { // 객체의 사용
+//        return client.getCountries()
+//    }
 }

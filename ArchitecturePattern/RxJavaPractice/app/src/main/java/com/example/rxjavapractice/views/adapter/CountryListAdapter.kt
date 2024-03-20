@@ -1,6 +1,5 @@
 package com.example.rxjavapractice.views.adapter
 
-<<<<<<< HEAD
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +8,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.rxjavapractice.R
 import com.example.rxjavapractice.dataModel.CountryModel
+import com.example.rxjavapractice.utils.Util
 
 class CountryListAdapter(countries: MutableList<CountryModel>) :
     RecyclerView.Adapter<CountryListAdapter.CountryViewHolder>() {
@@ -41,23 +41,19 @@ class CountryListAdapter(countries: MutableList<CountryModel>) :
 
     inner class CountryViewHolder(itemView: View) :
         RecyclerView.ViewHolder(itemView) {
-        var countryImage: ImageView? = null
-        var countryName: TextView? = null
-        var countryCapital: TextView? = null
+        var countryImage = itemView.findViewById<ImageView>(R.id.countryimageview)
+        var countryName = itemView.findViewById<TextView>(R.id.name)
+        var countryCapital = itemView.findViewById<TextView>(R.id.capital)
 
 
         fun bind(country: CountryModel) {
-//            countryName.setText(country.getCountryName())
-//            countryCapital.setText(country.getCapital())
-//            Util.loadImage(
-//                countryImage,
-//                country.getFlag(),
-//                Util.getProgressDrawable(countryImage!!.context)
-//            )
+            countryName?.text = country.countryName
+            countryCapital?.text = (country.capital)
+            Util.loadImage(
+                countryImage,
+                country.flag,
+                Util.getProgressDrawable(countryImage!!.context)
+            )
         }
     }
 }
-=======
-class CountryListAdapter {
-}
->>>>>>> 61b1f7696213fd0e8c836cd7963b966641208c78

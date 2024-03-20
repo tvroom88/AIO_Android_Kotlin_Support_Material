@@ -7,6 +7,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.rxjavapractice.views.countries.ShowCountriesActivity
 import io.reactivex.Observable
+import io.reactivex.Single
 import io.reactivex.observers.DisposableObserver
 
 
@@ -22,7 +23,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        textView = findViewById(R.id.textView)
+        textView = findViewById(R.id.title)
         exBtn1 = findViewById(R.id.exBtn1)
 
         exBtn1.setOnClickListener {

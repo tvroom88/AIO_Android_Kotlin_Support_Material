@@ -1,22 +1,34 @@
 package com.example.rxjavapractice.network
 
-<<<<<<< HEAD
+import com.example.rxjavapractice.dataModel.CountryModel
+import io.reactivex.Single
 import retrofit2.Retrofit
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
+
     private const val BASE_URL = "https://raw.githubusercontent.com/"
 
-    private val client = Retrofit
-        .Builder()
-        .baseUrl(BASE_URL)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
+    private var instance: RetrofitInstance? = null
 
-    fun getInstance(): Retrofit {
-        return client
+    private val api: CountriesApi by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .build()
+            .create(CountriesApi::class.java)
     }
-=======
-class RetrofitInstance {
->>>>>>> 61b1f7696213fd0e8c836cd7963b966641208c78
+
+    fun getInstance(): RetrofitInstance? {
+        if(instance == null){
+            instance = RetrofitInstance
+        }
+        return instance
+    }
+
+    fun getCountries(): Single<List<CountryModel>> {
+        return api.getCountries()
+    }
 }
