@@ -21,7 +21,7 @@ class CoinActivity : AppCompatActivity() {
 
         coinViewModel.countries.observe(this, Observer {
            for(a in it.data){
-               Log.d("aaaaaaaaaa", a.key)
+
            }
         })
     }
