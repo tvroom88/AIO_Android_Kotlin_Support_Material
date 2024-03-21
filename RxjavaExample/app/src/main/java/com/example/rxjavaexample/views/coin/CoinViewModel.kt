@@ -21,7 +21,7 @@ class CoinViewModel : ViewModel() {
 
     private val disposable: CompositeDisposable = CompositeDisposable()
 
-    private fun getCoinsList() {
+    fun getCoinsList() {
 
         val coinList: Single<CurrentPriceList> = networkRepository.getCurrentCoinList()
 
