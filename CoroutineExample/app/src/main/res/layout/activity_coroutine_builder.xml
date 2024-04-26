@@ -41,6 +41,22 @@
             android:layout_weight="1"
             android:onClick="clickHandler"
             android:text="B" />
+
+        <Button
+            android:id="@+id/btn_fragmentC"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="clickHandler"
+            android:text="C" />
+
+        <Button
+            android:id="@+id/btn_fragmentD"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="clickHandler"
+            android:text="D" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

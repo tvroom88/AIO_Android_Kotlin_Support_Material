@@ -18,6 +18,18 @@ class CoroutineBuilderActivity : AppCompatActivity() {
         LaunchFragment()
     }
 
+    private val asyncFragment: Fragment by lazy {
+        AsyncFragment()
+    }
+
+    private val runBlockingFragment: Fragment by lazy {
+        RunBlockingFragment()
+    }
+
+    private val withContextFragment: Fragment by lazy {
+        WithContextFragment()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_coroutine_builder)
@@ -35,7 +47,13 @@ class CoroutineBuilderActivity : AppCompatActivity() {
             R.id.btn_fragmentA -> transaction?.replace(R.id.frameLayout, launchFragment)
                 ?.commitAllowingStateLoss()
 
-            R.id.btn_fragmentB -> transaction?.replace(R.id.frameLayout, launchFragment)
+            R.id.btn_fragmentB -> transaction?.replace(R.id.frameLayout, asyncFragment)
+                ?.commitAllowingStateLoss()
+
+            R.id.btn_fragmentC -> transaction?.replace(R.id.frameLayout, runBlockingFragment)
+                ?.commitAllowingStateLoss()
+
+            R.id.btn_fragmentC -> transaction?.replace(R.id.frameLayout, withContextFragment)
                 ?.commitAllowingStateLoss()
         }
     }

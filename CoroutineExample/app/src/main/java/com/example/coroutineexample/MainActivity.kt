@@ -6,6 +6,7 @@ import android.util.Log
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import com.example.coroutineexample.coroutinebuilder.CoroutineBuilderActivity
+import com.example.coroutineexample.coroutinescope.CoroutineScopeActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -23,9 +24,20 @@ import java.lang.Thread.sleep
  * 2) https://wooooooak.github.io/kotlin/2019/06/18/coroutineStudy/
  * 3) CoroutineBuilder - Job 내용 : https://velog.io/@jaewonkim1468/Coroutine%EC%9D%98-Job
  */
+
+/**
+ * CoroutineBuilder (코루틴 생성) 차례 :
+ *
+ * 1. Coroutine launch
+ *    a) launch (non-blocking)
+ *    b) async (non-blocking)
+ *    c) runBlocking (blocking)
+ *
+ */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var testBtn1: Button
+    private lateinit var testBtn2: Button
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,18 +50,17 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-
-
-
+        testBtn2 = findViewById(R.id.testBtn2)
+        testBtn2.setOnClickListener {
+            val intent = Intent(this, CoroutineScopeActivity::class.java)
+            startActivity(intent)
+        }
 
 //        GlobalScope.launch {
 //            checkJob()
 //        }
 //        buildByUsingAsync()
     }
-
-
-
 
 
 //    /**
