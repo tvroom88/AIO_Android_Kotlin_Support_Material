@@ -53,7 +53,7 @@ class CoroutineBuilderActivity : AppCompatActivity() {
             R.id.btn_fragmentC -> transaction?.replace(R.id.frameLayout, runBlockingFragment)
                 ?.commitAllowingStateLoss()
 
-            R.id.btn_fragmentC -> transaction?.replace(R.id.frameLayout, withContextFragment)
+            R.id.btn_fragmentD -> transaction?.replace(R.id.frameLayout, withContextFragment)
                 ?.commitAllowingStateLoss()
         }
     }
