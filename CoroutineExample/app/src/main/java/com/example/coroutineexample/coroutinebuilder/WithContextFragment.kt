@@ -30,7 +30,7 @@ class WithContextFragment : Fragment() {
         CoroutineScope(Dispatchers.Default).launch {
             withContextExample()
         }
-
+        withContextExample()
         return inflater.inflate(R.layout.fragment_with_context, container, false)
     }
 
@@ -44,26 +44,28 @@ class WithContextFragment : Fragment() {
 
 
     // withContext를 사용하면 result1, result2가 순차적으로 실행되고 결과를 언게 됩니다.
-    private suspend fun withContextExample() {
+    private fun withContextExample() {
         Log.d("WithContextFragment", "--- Start ---")
+        CoroutineScope(Dispatchers.Default).launch {
+            val result1 = withContext(Dispatchers.IO) {
+                // 첫 번째 작업: 네트워크 호출 등
+                Log.d("WithContextFragment", "withContextExample - result1 inside")
+                delay(500) // 1초 대기
+                "Result 1"
+            }
+            Log.d("WithContextFragment", "withContextExample - result1 $result1")
 
-        val result1 = withContext(Dispatchers.IO) {
-            // 첫 번째 작업: 네트워크 호출 등
-            Log.d("WithContextFragment", "withContextExample - result1 inside")
-            delay(500) // 1초 대기
-            "Result 1"
+            val result2 = withContext(Dispatchers.IO) {
+                // 두 번째 작업: 다른 네트워크 호출 등
+                Log.d("WithContextFragment", "withContextExample - result2 inside")
+
+                delay(2000) // 1초 대기
+                "Result 2"
+            }
+            Log.d("WithContextFragment", "withContextExample - result2 $result2")
+            Log.d("WithContextFragment", "--- End ---")
         }
-        Log.d("WithContextFragment", "withContextExample - result1 $result1")
 
-        val result2 = withContext(Dispatchers.IO) {
-            // 두 번째 작업: 다른 네트워크 호출 등
-            Log.d("WithContextFragment", "withContextExample - result2 inside")
-
-            delay(2000) // 1초 대기
-            "Result 2"
-        }
-        Log.d("WithContextFragment", "withContextExample - result2 $result2")
-        Log.d("WithContextFragment", "--- End ---")
 
         // --- Start ---
         // withContextExample - result1 inside

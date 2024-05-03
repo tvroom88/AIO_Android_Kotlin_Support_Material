@@ -77,5 +77,10 @@ class CoroutineScopeActivity : AppCompatActivity() {
         }
     }
 
+    //동일한 Scope안의 코루틴을 취소하는 경우 모든 자식 코루틴들도 취소된다. 하지만 다른 스코프를 지정하여 사용하는 코루틴은 취소되지 않는다.
+    private fun test(){
+
+    }
+
 
 }

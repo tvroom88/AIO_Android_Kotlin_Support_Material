@@ -8,6 +8,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+
+        val kotlinBasicA = KotlinBasicA()
+        kotlinBasicA.test()
+
+        /**
+         * 1. KotlinBasicA : 클래스와 프로퍼티
+         */
+
         // 1. 변수 선언
         val immutable_string = ""
         var count: Int = 10
@@ -88,7 +96,7 @@ class MainActivity : AppCompatActivity() {
         val test1: (String) -> Int = {
             val a = 3
             val b = 3
-            a+b
+            a + b
         }
 
         /**
@@ -106,10 +114,8 @@ class MainActivity : AppCompatActivity() {
             num + input.length
         }
 
-
         val car = Car()
         val wheels = car.wheels
-
 
     }
 
@@ -119,7 +125,7 @@ class MainActivity : AppCompatActivity() {
      * 만약 너가 커스텀 타입을 추가하려면 class 키워드를 사용해서 추가!
      */
 
-    class Wheel{}
+    class Wheel {}
 
     class Car {
         val wheels = listOf<Wheel>()
@@ -132,10 +138,10 @@ class MainActivity : AppCompatActivity() {
      * 클래스는 함수를 사용하여 동작을 모델링합니다. 함수는 상태를 수정할 수 있으므로 노출하려는 데이터만 노출할 수 있습니다.
      */
 
-    class DoorLock{}
-    class Key{}
-    class Car3(val wheels: List<Wheel>){
-        private val doorLock:DoorLock = DoorLock()
+    class DoorLock {}
+    class Key {}
+    class Car3(val wheels: List<Wheel>) {
+        private val doorLock: DoorLock = DoorLock()
 
         var gallonsOfFuelInTank: Int = 15
             private set
